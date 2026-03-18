@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+    --color-card: #0D2137;
+    --color-cardHover: #0F2D4A;
+    --color-button: #0EA5E9;
+    --color-buttonHover: #38BDF8;
+    --color-bodyText: #CBD5E1;
+    --color-heading: #F0F9FF;
+    --color-borderColour: #1E3A52;
+    --color-accent: #0EA5E9;
+    --color-accentSoft: #7DD3FC;
+    --color-success: #34D399;
+    --color-danger: #F87171;
+}
+
+:root {
+    background-color: #020C18;
+    background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(14, 165, 233, 0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(56, 189, 248, 0.04) 0%, transparent 50%);
+    min-height: 100vh;
+}
+
+body {
+    color: #CBD5E1;
+}
+
+::-webkit-scrollbar {
+    display: none;
+}
