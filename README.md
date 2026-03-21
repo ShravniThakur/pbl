@@ -313,8 +313,30 @@ Hard rejection rules run **before** ML scoring:
 
 > This is an **advisory system**, not a lender. All loan eligibility assessments are based on mock rules and a model trained on synthetic data. Results do not represent actual bank decisions. No real credit bureau data is used.
 
+
+## ⛓️ Blockchain Explainability (In Progress)
+
+SHAP explanation data (`summary`, `topPositive`, `topNegative`, `baseValue`) is currently stored in MongoDB alongside each loan eligibility check under the `mlExplanation` field.
+
+A separate blockchain integration is being developed by a teammate that will:
+- Write SHAP explanation records to an immutable on-chain ledger
+- Allow users to verify that explanations have not been tampered with
+- Provide a transaction hash per eligibility check for audit purposes
+
+The `mlExplanation` object returned by the SHAP service (`POST /explain`) is the exact data feed for this integration. Each record looks like:
+
+```json
+{
+  "summary": "Your application looks strong. Key strengths: Credit Score and Monthly Income.",
+  "topPositive": [{ "feature": "credit_score", "label": "Credit Score", "shap_value": 0.42, "direction": "positive", "magnitude": "high" }],
+  "topNegative": [{ "feature": "dti_ratio", "label": "Debt-to-Income Ratio", "shap_value": -0.18, "direction": "negative", "magnitude": "medium" }],
+  "baseValue": 0.48
+}
+```
+
 ---
 
 ## 👥 Team
 
-Built as part of a Project-Based Learning (PBL) assignment.
+Built as part of a Project-Based Learning (PBL) assignment
+by Srishti Pandey, Tejas Khadilkar and Shravni Thakur.
