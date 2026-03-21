@@ -271,6 +271,72 @@ const LoanDetail = () => {
                 </div>
             )}
 
+            {/* ML Result */}
+{check.mlResult && (
+    <div className="bg-card border border-borderColour rounded-2xl p-6">
+        <p className="text-lg font-black text-heading mb-5">ML Prediction</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+                { label: 'Score',       value: `${check.mlResult.score} / 100` },
+                { label: 'Probability', value: `${(check.mlResult.probability * 100).toFixed(1)}%` },
+                { label: 'Risk',        value: check.mlResult.riskCategory },
+                { label: 'Confidence',  value: check.mlResult.confidence },
+            ].map(({ label, value }) => (
+                <div key={label} className="bg-black/30 border border-borderColour rounded-xl p-4">
+                    <p className="text-xs text-bodyText/50 uppercase tracking-wide mb-2">{label}</p>
+                    <p className="text-base font-black text-accentSoft">{value}</p>
+                </div>
+            ))}
+        </div>
+    </div>
+)}
+
+{/* SHAP Explanation */}
+{check.mlExplanation && (
+    <div className="bg-card border border-borderColour rounded-2xl p-6">
+        <p className="text-lg font-black text-heading mb-2">Why This Decision?</p>
+        <p className="text-sm text-bodyText/60 mb-5">{check.mlExplanation.summary}</p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* Positive factors */}
+            <div>
+                <p className="text-xs font-semibold text-success uppercase tracking-wide mb-3">
+                    ↑ Factors Helping You
+                </p>
+                <div className="flex flex-col gap-2">
+                    {check.mlExplanation.topPositive.map((f) => (
+                        <div key={f.feature} className="bg-success/5 border border-success/20 rounded-xl px-4 py-3">
+                            <div className="flex justify-between items-center">
+                                <p className="text-sm font-semibold text-bodyText">{f.label}</p>
+                                <p className="text-xs font-bold text-success">+{f.shap_value.toFixed(3)}</p>
+                            </div>
+                            <p className="text-xs text-bodyText/40 mt-0.5 capitalize">{f.magnitude} impact</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Negative factors */}
+            <div>
+                <p className="text-xs font-semibold text-danger uppercase tracking-wide mb-3">
+                    ↓ Factors Hurting You
+                </p>
+                <div className="flex flex-col gap-2">
+                    {check.mlExplanation.topNegative.map((f) => (
+                        <div key={f.feature} className="bg-danger/5 border border-danger/20 rounded-xl px-4 py-3">
+                            <div className="flex justify-between items-center">
+                                <p className="text-sm font-semibold text-bodyText">{f.label}</p>
+                                <p className="text-xs font-bold text-danger">{f.shap_value.toFixed(3)}</p>
+                            </div>
+                            <p className="text-xs text-bodyText/40 mt-0.5 capitalize">{f.magnitude} impact</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    </div>
+)}
+
             {/* Actions */}
             <div className="flex flex-wrap gap-3">
                 <button

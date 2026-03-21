@@ -1,3 +1,4 @@
+const { getFullMLResult } = require('./mlservice')
 const LoanEligibilityCheck = require('../models/LoanEligibilityCheck')
 const FinancialProfile = require('../models/FinancialProfile')
 
@@ -16,13 +17,21 @@ const calculateEMI = (principal, annualRatePercent, tenureMonths) => {
 }
 
 
-// Placeholder scoring — replace with ML model calls later
-const computeEligibilityScore = (profile, loanType, loanDetails) => {
-    return 50
-}
-
-const computeRiskScore = (profile, loanType, loanDetails) => {
-    return 50
+// ML scoring — calls Python microservices
+// Returns { score, riskScore } or falls back to 50/50 if service is down
+const computeMLScores = async (profile, requestedLoanAmount, tenureMonths, hasCoApplicant) => {
+    try {
+        const { prediction } = await getFullMLResult(profile, requestedLoanAmount, tenureMonths, hasCoApplicant)
+        return {
+            eligibilityScore: prediction.score,
+            riskScore: prediction.score,        // use same score; risk category comes from ML
+            mlPrediction: prediction,
+            mlAvailable: true
+        }
+    } catch (err) {
+        console.warn("ML service unavailable, using fallback scores:", err.message)
+        return { eligibilityScore: 50, riskScore: 50, mlPrediction: null, mlAvailable: false }
+    }
 }
 
 
@@ -207,11 +216,56 @@ const createLoanEligibilityCheckService = async (userID, data) => {
     const rejectionReasons = runRuleEngine(profile, requestedLoanAmount, loanType, loanDetails)
     const eligible = rejectionReasons.length === 0
 
+    // Default tenure per loan type for ML input
+    const defaultTenure = {
+        "Personal Loan": 60, "Education Loan": 120,
+        "Home Loan": 240, "Vehicle Loan": 84, "Business Loan": 60
+    }
+    const tenureMonths = loanDetails.totalWorkExperienceMonths
+        ? defaultTenure[loanType]
+        : defaultTenure[loanType]
+    const hasCoApplicant = !!loanDetails.coApplicant
+
+    // Call ML service (runs even on rejection — for explanation)
+    const { eligibilityScore, riskScore, mlPrediction, mlAvailable } =
+        await computeMLScores(profile, requestedLoanAmount, tenureMonths, hasCoApplicant)
+
+    // Get SHAP explanation separately if ML is available
+    let mlExplanation = null
+    if (mlAvailable) {
+        try {
+            const { getFullMLResult } = require('./mlservice')
+            const payload = {
+                age: profile.age,
+                employment_type: profile.employmentType,
+                city_tier: profile.cityTier,
+                has_coapplicant: hasCoApplicant ? 1 : 0,
+                monthly_income: profile.monthlyNetIncome,
+                credit_score: profile.creditScore,
+                total_existing_emi:
+                    profile.existingEmis.reduce((s, e) => s + e.monthlyAmount, 0) +
+                    profile.creditCardDues.reduce((s, c) => s + c.minimumDue, 0) +
+                    profile.otherLoans.reduce((s, l) => s + l.monthlyEMI, 0),
+                requested_loan_amount: requestedLoanAmount,
+                loan_tenure_months: tenureMonths,
+                work_experience_years: profile.employmentTenureMonths / 12,
+            }
+            const axios = require('axios')
+            const { data } = await axios.post(
+                (process.env.SHAP_SERVICE_URL || 'http://localhost:8001') + '/explain',
+                payload, { timeout: 15000 }
+            )
+            mlExplanation = data
+        } catch (e) {
+            console.warn("SHAP service unavailable:", e.message)
+        }
+    }
+
     let results = {
         eligible,
         rejectionReasons,
-        eligibilityScore: null,
-        riskScore: null,
+        eligibilityScore: eligible ? eligibilityScore : null,
+        riskScore: eligible ? riskScore : null,
         riskCategory: null,
         maxApprovedLoanAmount: null,
         maxApprovedTenureMonths: null,
@@ -219,10 +273,7 @@ const createLoanEligibilityCheckService = async (userID, data) => {
         emi: null
     }
 
-    // Only compute scores and offer if all hard rules passed
     if (eligible) {
-        const eligibilityScore = computeEligibilityScore(profile, loanType, loanDetails)
-        const riskScore = computeRiskScore(profile, loanType, loanDetails)
         const riskCategory =
             riskScore <= 20 ? "Very Low" :
             riskScore <= 40 ? "Low" :
@@ -246,7 +297,20 @@ const createLoanEligibilityCheckService = async (userID, data) => {
         requestedLoanAmount,
         loanType,
         loanDetails,
-        results
+        results,
+        mlResult: mlPrediction ? {
+            probability:  mlPrediction.probability,
+            score:        mlPrediction.score,
+            riskCategory: mlPrediction.risk_category,
+            verdict:      mlPrediction.verdict,
+            confidence:   mlPrediction.confidence,
+        } : null,
+        mlExplanation: mlExplanation ? {
+            summary:     mlExplanation.summary,
+            topPositive: mlExplanation.top_positive,
+            topNegative: mlExplanation.top_negative,
+            baseValue:   mlExplanation.base_value,
+        } : null,
     })
 
     return check
