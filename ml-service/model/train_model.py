@@ -28,10 +28,22 @@ print("📂 Loading data …")
 df = pd.read_csv(DATA_PATH)
 print(f"   Rows: {len(df)} | Approval rate: {df['eligible'].mean():.1%}")
 
+# ── 1b. Reconcile CSV column names → FEATURE_COLUMNS ──────────────────────────
+df = df.rename(columns={
+    "loan_amount":          "requested_loan_amount",
+    "existing_emis":        "total_existing_emi",
+    "emi_to_income_ratio":  "dti_ratio",
+    "loan_to_income_ratio": "loan_to_income",
+})
+if "employment_tenure_months" not in df.columns:
+    df["employment_tenure_months"] = df["work_experience_years"] * 12
+if "has_coapplicant" not in df.columns:
+    df["has_coapplicant"] = 0
+
 # ── 2. Encode categoricals → encoder.pkl ──────────────────────────────────────
 print("🔤 Fitting CategoricalEncoder …")
-encoder  = CategoricalEncoder()
-df_enc   = encoder.fit_transform_df(df)   # replaces string cols with ints in-place copy
+encoder = CategoricalEncoder()
+df_enc  = encoder.fit_transform_df(df)
 
 # ── 3. Split X / y ─────────────────────────────────────────────────────────────
 X = df_enc[FEATURE_COLUMNS].values
