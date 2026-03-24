@@ -1,15 +1,14 @@
-const {createFinancialProfileService, getFinancialProfileService, updateFinancialProfileService, deleteFinancialProfileService} = require('../services/financialProfile_service')
+const { createFinancialProfileService, getFinancialProfileService, updateFinancialProfileService, deleteFinancialProfileService } = require('../services/financialProfile_service')
 
-const createFinancialProfileController = async (req,res) => {
-    try{
-        const profile = await createFinancialProfileService(req.user.id, req.body)
-        return res.status(400).json({
+const createFinancialProfileController = async (req, res) => {
+    try {
+        const profile = await createFinancialProfileService(req.userId, req.body)
+        return res.status(201).json({
             success: true,
             message: "Financial Profile created successfully!",
             profile
         })
-    }
-    catch(err){
+    } catch (err) {
         return res.status(400).json({
             success: false,
             message: err.message
@@ -19,7 +18,7 @@ const createFinancialProfileController = async (req,res) => {
 
 const getFinancialProfileController = async (req, res) => {
     try {
-        const profile = await getFinancialProfileService(req.user.id)
+        const profile = await getFinancialProfileService(req.userId)
         return res.status(200).json({
             success: true,
             profile
@@ -34,7 +33,7 @@ const getFinancialProfileController = async (req, res) => {
 
 const updateFinancialProfileController = async (req, res) => {
     try {
-        const profile = await updateFinancialProfileService(req.user.id, req.body)
+        const profile = await updateFinancialProfileService(req.userId, req.body)
         return res.status(200).json({
             success: true,
             message: "Financial Profile updated successfully!",
@@ -50,7 +49,7 @@ const updateFinancialProfileController = async (req, res) => {
 
 const deleteFinancialProfileController = async (req, res) => {
     try {
-        await deleteFinancialProfileService(req.user.id)
+        await deleteFinancialProfileService(req.userId)
         return res.status(200).json({
             success: true,
             message: "Financial Profile deleted successfully!"
@@ -62,6 +61,7 @@ const deleteFinancialProfileController = async (req, res) => {
         })
     }
 }
+
 module.exports = {
     createFinancialProfileController,
     getFinancialProfileController,

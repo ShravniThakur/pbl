@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "@pinata/sdk": "^2.1.0",
     "axios": "^1.13.6",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.9.0",

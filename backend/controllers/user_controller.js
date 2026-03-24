@@ -17,6 +17,7 @@ const signUpController = async (req, res) => {
         })
     }
 }
+
 // login controller 
 const loginController = async (req, res) => {
     try {
@@ -34,10 +35,11 @@ const loginController = async (req, res) => {
         })
     }
 }
+
 // get profile controller
 const getProfileController = async (req, res) => {
     try {
-        const user = await getProfileService(req.user)
+        const user = await getProfileService({ id: req.userId })
         return res.status(200).json({
             success: true,
             user
@@ -50,13 +52,13 @@ const getProfileController = async (req, res) => {
         })
     }
 }
+
 // update profile controller
 const updateProfileController = async (req, res) => {
     try {
         const { name, email } = req.body
         const profilePic = req.file
-        const { id } = req.user
-        const updatedUser = await updateProfileService({ id, name, email, profilePic })
+        const updatedUser = await updateProfileService({ id: req.userId, name, email, profilePic })
         return res.status(200).json({
             success: true,
             message: "Profile updated successfully!",
@@ -70,12 +72,12 @@ const updateProfileController = async (req, res) => {
         })
     }
 }
+
 // change password controller
 const changePasswordController = async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body
-        const { id } = req.user
-        await changePasswordService({ id, oldPassword, newPassword })
+        await changePasswordService({ id: req.userId, oldPassword, newPassword })
         return res.status(200).json({
             success: true,
             message: "Password changed successfully!"
@@ -93,8 +95,7 @@ const changePasswordController = async (req, res) => {
 const deleteAccountController = async (req, res) => {
     try {
         const { password } = req.body
-        const { id } = req.user
-        await deleteAccountService({ id, password })
+        await deleteAccountService({ id: req.userId, password })
         return res.status(200).json({
             success: true,
             message: "Account deleted successfully!"

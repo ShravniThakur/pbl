@@ -111,7 +111,38 @@ const LoanEligibilityCheckSchema = new mongoose.Schema({
         riskScore: Number,
         riskCategory: { type: String, enum: RISK_CATEGORY },
         rejectionReasons: [String]
-    }
+    },
+
+    // Blockchain fields
+    blockchainTxHash:  { type: String, default: null },
+    ipfsMetadataHash:  { type: String, default: null },
+
+    // ML Result
+    mlResult: {
+        probability:  Number,
+        score:        Number,
+        riskCategory: String,
+        verdict:      String,
+        confidence:   String,
+    },
+
+    // SHAP Explanation
+    mlExplanation: {
+        summary:     String,
+        topPositive: [{
+            feature:    String,
+            label:      String,
+            shap_value: Number,
+            magnitude:  String
+        }],
+        topNegative: [{
+            feature:    String,
+            label:      String,
+            shap_value: Number,
+            magnitude:  String
+        }],
+        baseValue: Number,
+    },
 
 }, { timestamps: true })
 

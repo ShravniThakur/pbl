@@ -1,27 +1,36 @@
 require('dotenv').config();
-const pinataSDK = require('@pinata/sdk');
 const { ethers } = require('ethers');
-
-// Initialize Pinata
-const pinata = new pinataSDK(process.env.PINATA_API_KEY, process.env.PINATA_API_SECRET);
 
 async function recordDataOnChain(loanId, mlResultData) {
     try {
         console.log("--- Starting Blockchain Integration ---");
 
-        // 1. Upload the ML Result JSON to IPFS
-        const options = {
-            pinataMetadata: { name: `Loan_${loanId}` }
-        };
-        const ipfsResult = await pinata.pinJSONToIPFS(mlResultData, options);
+        // 1. Upload to IPFS via Pinata using JWT
+        const response = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.PINATA_JWT}`
+            },
+            body: JSON.stringify({
+                pinataContent: mlResultData,
+                pinataMetadata: { name: `Loan_${loanId}` }
+            })
+        });
+
+        const ipfsResult = await response.json();
+
+        if (!response.ok) {
+            throw new Error(`Pinata error: ${JSON.stringify(ipfsResult)}`);
+        }
+
         const ipfsHash = ipfsResult.IpfsHash;
         console.log("✅ Data pinned to IPFS. Hash:", ipfsHash);
 
         // 2. Setup Ethereum Connection
         const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
         const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-        
-        // This 'ABI' tells ethers how to talk to your specific contract functions
+
         const abi = [
             "function recordLoan(string memory _loanId, string memory _ipfsHash) public"
         ];
@@ -30,8 +39,6 @@ async function recordDataOnChain(loanId, mlResultData) {
         // 3. Send Transaction to Sepolia
         console.log("⏳ Sending transaction to Sepolia...");
         const tx = await contract.recordLoan(loanId, ipfsHash);
-        
-        // Wait for the block to be mined (confirmation)
         const receipt = await tx.wait();
         console.log("✅ Transaction Confirmed! Hash:", receipt.hash);
 
@@ -47,31 +54,40 @@ async function recordDataOnChain(loanId, mlResultData) {
     }
 }
 
-// Add this to your module.exports later
 async function verifyLoanOnChain(loanId) {
     try {
+        // 1. Read the IPFS hash from the smart contract (this is the trustless verification)
         const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
         const abi = [
             "function getLoan(string memory _loanId) public view returns (string memory)"
         ];
         const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, abi, provider);
 
-        // Call the 'view' function (this costs 0 gas!)
+        console.log("🔍 Querying chain for loanId:", loanId);
         const ipfsHash = await contract.getLoan(loanId);
-        
-        if (!ipfsHash) return { success: false, message: "No record found." };
+        console.log("🔍 Chain returned ipfsHash:", ipfsHash);
+
+        // Solidity returns "" for missing keys — treat as not found
+        if (!ipfsHash || ipfsHash === "") {
+            return { success: false, message: "No on-chain record found for this loan." };
+        }
+
+        // 2. Fetch the txHash from MongoDB (only used for the Etherscan link — not part of verification)
+        const LoanEligibilityCheck = require('../models/LoanEligibilityCheck');
+        const record = await LoanEligibilityCheck.findById(loanId).select('blockchainTxHash');
+        const txHash = record?.blockchainTxHash || null;
 
         return {
             success: true,
             ipfsHash: ipfsHash,
-            ipfsUrl: `https://gateway.pinata.cloud/ipfs/${ipfsHash}`
+            ipfsUrl: `https://gateway.pinata.cloud/ipfs/${ipfsHash}`,
+            txHash: txHash  // included so frontend can show Etherscan link
         };
+
     } catch (error) {
-        console.error("Verification Error:", error);
+        console.error("❌ Verification Error:", error);
         return { success: false, error: error.message };
     }
 }
 
 module.exports = { recordDataOnChain, verifyLoanOnChain };
-
-// module.exports = { recordDataOnChain };

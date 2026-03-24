@@ -1,7 +1,6 @@
 const { getFullMLResult } = require('./mlservice');
 const LoanEligibilityCheck = require('../models/LoanEligibilityCheck');
 const FinancialProfile = require('../models/FinancialProfile');
-// 1. IMPORT BLOCKCHAIN SERVICE
 const { recordDataOnChain } = require('./blockchainservice'); 
 
 // --- Helpers ---
@@ -80,7 +79,6 @@ const runRuleEngine = (profile, requestedLoanAmount, loanType, loanDetails) => {
         rejectionReasons.push(`Requested amount exceeds ₹${LOAN_TYPE_CONFIG[loanType].maxAmount.toLocaleString('en-IN')}.`);
     }
 
-    // Add business/loan specific rules here as per your original logic...
     return rejectionReasons;
 };
 
@@ -130,7 +128,7 @@ const createLoanEligibilityCheckService = async (userID, data) => {
         results = { eligible: true, rejectionReasons: [], eligibilityScore, riskScore, riskCategory, ...offer };
     }
 
-    // --- 2. PREPARE BLOCKCHAIN AUDIT LOG ---
+    // --- PREPARE BLOCKCHAIN AUDIT LOG ---
     const auditData = {
         userID,
         timestamp: new Date().toISOString(),
@@ -141,29 +139,13 @@ const createLoanEligibilityCheckService = async (userID, data) => {
         shapSummary: mlExplanation ? mlExplanation.summary : "No explanation available"
     };
 
-    // --- 3. ANCHOR TO BLOCKCHAIN ---
-    let blockchainProof = { txHash: null, ipfsHash: null };
-    try {
-        console.log("🚀 Starting Blockchain Anchor for User:", userID);
-        const anchorResult = await recordDataOnChain(`${userID}_${Date.now()}`, auditData);
-        if (anchorResult.success) {
-            blockchainProof.txHash = anchorResult.txHash;
-            blockchainProof.ipfsHash = anchorResult.ipfsHash;
-            console.log("✅ Blockchain Anchor Successful:", anchorResult.txHash);
-        }
-    } catch (bcError) {
-        console.error("❌ Blockchain Anchor Failed:", bcError.message);
-    }
-
-    // --- 4. CREATE DATABASE RECORD ---
+    // --- CREATE DATABASE RECORD FIRST (so we have the real _id) ---
     const check = await LoanEligibilityCheck.create({
         userID,
         requestedLoanAmount,
         loanType,
         loanDetails,
         results,
-        blockchainTxHash: blockchainProof.txHash,
-        ipfsMetadataHash: blockchainProof.ipfsHash,
         mlResult: mlPrediction ? {
             probability:  mlPrediction.probability,
             score:        mlPrediction.score,
@@ -178,6 +160,23 @@ const createLoanEligibilityCheckService = async (userID, data) => {
             baseValue:   mlExplanation.base_value,
         } : null,
     });
+
+    // --- ANCHOR TO BLOCKCHAIN USING THE REAL MongoDB _id AS KEY ---
+    try {
+        console.log("🚀 Starting Blockchain Anchor for User:", userID);
+        const anchorResult = await recordDataOnChain(check._id.toString(), auditData);
+        if (anchorResult.success) {
+            await LoanEligibilityCheck.findByIdAndUpdate(check._id, {
+                blockchainTxHash: anchorResult.txHash,
+                ipfsMetadataHash: anchorResult.ipfsHash,
+            });
+            check.blockchainTxHash = anchorResult.txHash;
+            check.ipfsMetadataHash = anchorResult.ipfsHash;
+            console.log("✅ Blockchain Anchor Successful:", anchorResult.txHash);
+        }
+    } catch (bcError) {
+        console.error("❌ Blockchain Anchor Failed:", bcError.message);
+    }
 
     return check;
 };
