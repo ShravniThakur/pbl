@@ -1,0 +1,9 @@
+ml-service/venv/
+ml-service/model/model_pipeline.pkl
+ml-service/model/shap_explainer.pkl
+ml-service/model/model.pkl
+ml-service/model/scaler.pkl
+ml-service/model/encoder.pkl
+ml-service/synthetic_loan_data.csv
+backend/node_modules/
+frontend/node_modules/
