@@ -1,7 +1,7 @@
 """
 shap_service.py  –  SHAP Explainability Microservice
 Port: 8001
-Uses: model/model_pipeline.pkl + model/shap_explainer.pkl
+Uses: model/model.pkl + model/shap_explainer.pkl + model/encoder.pkl + model/scaler.pkl
 """
 
 import os
@@ -28,24 +28,16 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"],
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "model")
 
 try:
-    pipeline  = joblib.load(os.path.join(MODEL_DIR, "model_pipeline.pkl"))
+    pipeline  = joblib.load(os.path.join(MODEL_DIR, "model.pkl"))
     explainer = joblib.load(os.path.join(MODEL_DIR, "shap_explainer.pkl"))
-    print("✅ model_pipeline.pkl + shap_explainer.pkl loaded")
+    encoder   = joblib.load(os.path.join(MODEL_DIR, "encoder.pkl"))
+    scaler    = joblib.load(os.path.join(MODEL_DIR, "scaler.pkl"))
+    print("✅ All artifacts loaded")
 except FileNotFoundError as e:
     raise RuntimeError(f"Artifact not found: {e}")
 
-# Get the feature names the pipeline actually produces after preprocessing
-# (OHE expands categorical columns, so we need the post-transform names)
-try:
-    preprocessor   = pipeline.named_steps["preprocessor"]
-    ohe            = preprocessor.named_transformers_["cat"]
-    num_features   = preprocessor.transformers_[0][2]           # numeric col names
-    cat_features_expanded = list(ohe.get_feature_names_out(
-        preprocessor.transformers_[1][2]                        # categorical col names
-    ))
-    TRANSFORMED_FEATURE_NAMES = num_features + cat_features_expanded
-except Exception:
-    TRANSFORMED_FEATURE_NAMES = None   # fallback: use indices
+# Since there's no OHE pipeline, feature names stay as-is after encoding
+TRANSFORMED_FEATURE_NAMES = FEATURE_COLUMNS
 
 
 # ── Schemas ────────────────────────────────────────────────────────────────────
@@ -125,15 +117,13 @@ def health():
 @app.post("/explain", response_model=ExplanationResponse)
 def explain(data: LoanInput):
     try:
-        raw = data.dict()
-        df  = preprocess_input(raw)
+        raw      = data.dict()
+        df       = preprocess_input(raw)
+        df_enc   = encoder.transform_df(df)        # str → int
+        X_scaled = scaler.transform(df_enc)        # scale all features
 
-        # Transform input through the preprocessor (same as pipeline does internally)
-        preprocessor = pipeline.named_steps["preprocessor"]
-        X_transformed = preprocessor.transform(df)
-
-        # SHAP values on transformed input
-        shap_values = explainer.shap_values(X_transformed)
+        # SHAP values on scaled input
+        shap_values = explainer.shap_values(X_scaled)
         if isinstance(shap_values, list):
             sv = np.array(shap_values[1][0])
         else:
@@ -145,26 +135,16 @@ def explain(data: LoanInput):
             else explainer.expected_value[1]
         )
 
-        # Map SHAP values back to feature names
-        feat_names = TRANSFORMED_FEATURE_NAMES or [f"feature_{i}" for i in range(len(sv))]
-
-        # Collapse OHE features back to original categorical column name
-        # e.g. "employment_type_Salaried" → "employment_type"
+        # Map SHAP values to feature names (no OHE expansion, 1:1 mapping)
         collapsed: dict = {}
-        for fname, sval in zip(feat_names, sv):
-            # find original column name (everything before first underscore-split match)
-            orig = fname
-            for col in FEATURE_COLUMNS:
-                if fname == col or fname.startswith(col + "_"):
-                    orig = col
-                    break
-            collapsed[orig] = collapsed.get(orig, 0.0) + float(sval)
+        for fname, sval in zip(TRANSFORMED_FEATURE_NAMES, sv):
+            collapsed[fname] = collapsed.get(fname, 0.0) + float(sval)
 
-        prob    = float(pipeline.predict_proba(df)[0][1])
+        prob    = float(pipeline.predict_proba(X_scaled)[0][1])
         score   = round(prob * 100, 2)
         verdict = get_verdict(score)
 
-        max_abs = max(abs(v) for v in collapsed.values()) or 1.0
+        max_abs  = max(abs(v) for v in collapsed.values()) or 1.0
         contribs = [_contribution(k, v, max_abs) for k, v in collapsed.items()]
         contribs.sort(key=lambda c: abs(c.shap_value), reverse=True)
 

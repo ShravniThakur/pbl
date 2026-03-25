@@ -26,10 +26,12 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"],
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "model")
 
 try:
-    pipeline = joblib.load(os.path.join(MODEL_DIR, "model_pipeline.pkl"))
-    print("✅ model_pipeline.pkl loaded")
+    pipeline = joblib.load(os.path.join(MODEL_DIR, "model.pkl"))
+    encoder  = joblib.load(os.path.join(MODEL_DIR, "encoder.pkl"))
+    scaler   = joblib.load(os.path.join(MODEL_DIR, "scaler.pkl"))
+    print("✅ model.pkl + encoder.pkl + scaler.pkl loaded")
 except FileNotFoundError as e:
-    raise RuntimeError(f"model_pipeline.pkl not found: {e}")
+    raise RuntimeError(f"Artifact not found: {e}")
 
 # Load meta.json if it exists (optional)
 meta_path = os.path.join(MODEL_DIR, "meta.json")
@@ -84,9 +86,11 @@ def model_info():
 @app.post("/predict", response_model=PredictionResponse)
 def predict(data: LoanInput):
     try:
-        df = preprocess_input(data.dict())
-        prob  = float(pipeline.predict_proba(df)[0][1])
-        score = round(prob * 100, 2)
+        df        = preprocess_input(data.dict())
+        df_enc    = encoder.transform_df(df)          # str → int
+        X_scaled  = scaler.transform(df_enc)          # scale numerics
+        prob      = float(pipeline.predict_proba(X_scaled)[0][1])
+        score     = round(prob * 100, 2)
         return PredictionResponse(
             probability   = round(prob, 4),
             score         = score,
