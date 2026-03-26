@@ -57,7 +57,7 @@ const BlockchainVerifier = ({ loanId }) => {
 
       <div className="flex flex-col gap-2">
         <p className="text-xs text-bodyText/50 font-semibold uppercase tracking-wide">IPFS CID</p>
-        <code className="text-xs text-accentSoft bg-black/30 border border-borderColour rounded-lg px-3 py-2 break-all">
+        <code className="text-xs text-accentSoft bg-slate-50 border border-borderColour rounded-lg px-3 py-2 break-all">
           {proof.ipfsHash}
         </code>
       </div>

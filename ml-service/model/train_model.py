@@ -6,6 +6,8 @@ Saves: model.pkl  scaler.pkl  encoder.pkl  meta.json
 
 import sys, os, json
 from datetime import datetime
+import joblib
+import shap          # ← add this line
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -97,3 +99,8 @@ with open(os.path.join(MODEL_DIR, "meta.json"), "w") as f:
     json.dump(meta, f, indent=2)
 
 print("\n✅ Saved: model/model.pkl  model/scaler.pkl  model/encoder.pkl  model/meta.json")
+
+# Generate and save SHAP explainer
+explainer = shap.TreeExplainer(model)
+joblib.dump(explainer, os.path.join(MODEL_DIR, "shap_explainer.pkl"))
+print("✅ Saved: shap_explainer.pkl")

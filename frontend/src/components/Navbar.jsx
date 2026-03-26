@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom"
 import { useContext } from "react"
 import { AppContext } from "../context/AppContext"
+import logo from "../assets/Logo.png"
+
 
 const Navbar = () => {
     const navigate = useNavigate()
@@ -25,12 +27,7 @@ const Navbar = () => {
                 onClick={() => navigate('/')}
                 className="flex items-center gap-3 cursor-pointer"
             >
-                <div className="w-9 h-9 rounded-xl bg-button flex items-center justify-center text-white font-black text-base">
-                    L
-                </div>
-                <span className="text-heading font-black text-xl tracking-tight">
-                    LOAN
-                </span>
+                <img className="w-50" src={logo}></img>
             </div>
 
             {/* Logout */}

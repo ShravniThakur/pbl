@@ -3,6 +3,7 @@ import { AppContext } from "../context/AppContext"
 import { Link, useNavigate } from "react-router-dom"
 import axios from "axios"
 import { toast } from "react-toastify"
+import logo from "../assets/L.png"
 
 const Signup = () => {
     const { backend_url, setToken } = useContext(AppContext)
@@ -33,7 +34,7 @@ const Signup = () => {
         }
     }
 
-    const inputClass = `bg-black/30 border border-borderColour rounded-lg px-4 py-2.5 text-bodyText text-sm focus:outline-none focus:border-button transition-colors duration-200 w-full`
+    const inputClass = `bg-white border border-borderColour rounded-lg px-4 py-2.5 text-bodyText text-sm focus:outline-none focus:border-button transition-colors duration-200 w-full`
 
     return (
         <div className="min-h-screen flex items-center justify-center px-4 font-sans text-bodyText">
@@ -42,15 +43,15 @@ const Signup = () => {
 
                 {/* Logo */}
                 <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-button mb-4 shadow-lg shadow-button/20">
-                        <span className="text-white font-black text-xl">L</span>
+                    <div className="flex justify-center">
+                        <img className="w-20" src={logo}></img>
                     </div>
                     <p className="text-3xl font-black text-heading">Create account</p>
                     <p className="text-sm text-bodyText/60 mt-1">Start checking your loan eligibility for free</p>
                 </div>
 
                 {/* Card */}
-                <div className="bg-card border border-borderColour rounded-2xl p-8">
+                <div className="bg-card border border-borderColour rounded-xl p-8">
                     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
                         <div className="flex flex-col gap-1">

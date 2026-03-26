@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router"
+import logo from "../assets/Logo.png"
 
 const Landing = () => {
     const navigate = useNavigate()
@@ -11,8 +12,7 @@ const Landing = () => {
                 <div className="lg:flex gap-16 items-center">
                     <div className="mb-10 lg:mb-0 lg:w-[60%]">
                         <div className="flex items-center gap-3 mb-8">
-                            <div className="w-10 h-10 rounded-xl bg-button flex items-center justify-center text-white font-black text-lg">L</div>
-                            <span className="text-heading font-black text-2xl tracking-tight">LOAN</span>
+                            <img className="w-100" src={logo}></img>
                         </div>
                         <p className="text-4xl md:text-5xl font-black text-heading leading-tight mb-6">
                             Know your loan <span className="text-accent">eligibility</span> before you apply.
@@ -41,7 +41,7 @@ const Landing = () => {
                             { value: '100%', label: 'Data Driven', icon: '📊' },
                             { value: 'Free', label: 'To Use', icon: '✅' },
                         ].map(({ value, label, icon }) => (
-                            <div key={label} className="bg-card border border-borderColour rounded-2xl p-6 hover:bg-cardHover duration-300 text-center">
+                            <div key={label} className="bg-card border border-borderColour rounded-xl p-6 hover:bg-cardHover duration-300 text-center">
                                 <p className="text-3xl mb-2">{icon}</p>
                                 <p className="text-2xl font-black text-heading">{value}</p>
                                 <p className="text-sm text-accentSoft font-semibold">{label}</p>
@@ -63,7 +63,7 @@ const Landing = () => {
                             { icon: '💼', title: 'Business Loan', desc: 'Turnover, GST filing, business vintage — get a business loan offer based on your actual financials.' },
                             { icon: '📈', title: 'Risk & Eligibility Score', desc: 'Every check produces an eligibility score and risk category so you know exactly where you stand.' },
                         ].map(({ icon, title, desc }) => (
-                            <div key={title} className="flex flex-col gap-4 bg-card rounded-2xl p-7 hover:bg-cardHover border border-borderColour duration-300">
+                            <div key={title} className="flex flex-col gap-4 bg-card rounded-xl p-7 hover:bg-cardHover border border-borderColour duration-300">
                                 <div className="flex gap-3 items-center">
                                     <span className="text-3xl">{icon}</span>
                                     <p className="font-bold text-xl text-accentSoft">{title}</p>
@@ -85,7 +85,7 @@ const Landing = () => {
                             { step: '03', icon: '🔍', title: 'Run a Check', desc: 'Choose your loan type and fill in the loan-specific details.' },
                             { step: '04', icon: '✅', title: 'Get Your Offer', desc: 'Instantly see your approved amount, rate, tenure and EMI.' },
                         ].map(({ step, icon, title, desc }) => (
-                            <div key={step} className="flex flex-col gap-4 bg-card rounded-2xl p-7 hover:bg-cardHover border border-borderColour duration-300">
+                            <div key={step} className="flex flex-col gap-4 bg-card rounded-xl p-7 hover:bg-cardHover border border-borderColour duration-300">
                                 <div className="flex gap-3 items-center">
                                     <span className="text-xs font-black text-button bg-button/10 px-2 py-1 rounded-lg">{step}</span>
                                     <span className="text-2xl">{icon}</span>
@@ -98,7 +98,7 @@ const Landing = () => {
                 </div>
 
                 {/* Rule Engine */}
-                <div className="bg-card border border-borderColour rounded-2xl p-10">
+                <div className="bg-card border border-borderColour rounded-xl p-10">
                     <p className="text-center font-black text-4xl text-heading mb-3">SMART RULE ENGINE</p>
                     <p className="text-center mb-10">Our system checks every application against real-world lending rules.</p>
                     <div className="flex flex-col gap-4 md:grid grid-cols-2 lg:grid-cols-3">
@@ -110,7 +110,7 @@ const Landing = () => {
                             { icon: '🔎', rule: 'Inquiry Check', desc: 'Too many recent loan inquiries (3+ in 6 months) signals risk and affects eligibility.' },
                             { icon: '💳', rule: 'Payment History', desc: 'Serious defaults result in automatic rejection. Clean history improves your offer.' },
                         ].map(({ icon, rule, desc }) => (
-                            <div key={rule} className="flex gap-4 items-start bg-black/20 rounded-xl p-5 border border-borderColour">
+                            <div key={rule} className="flex gap-4 items-start bg-slate-50 rounded-lg p-5 border border-borderColour">
                                 <span className="text-2xl mt-1">{icon}</span>
                                 <div>
                                     <p className="font-bold text-accentSoft mb-1">{rule}</p>
@@ -134,7 +134,7 @@ const Landing = () => {
                             { q: 'Can I add a co-applicant?', a: 'Yes. Co-applicants are mandatory for Education loans and optional for all other loan types. Adding one can improve your eligibility.' },
                             { q: 'Is it free to use?', a: 'Yes. All eligibility checks are completely free. Run as many checks as you need for any loan type.' },
                         ].map(({ q, a }) => (
-                            <div key={q} className="flex flex-col gap-4 bg-card rounded-2xl p-7 hover:bg-cardHover border border-borderColour duration-300">
+                            <div key={q} className="flex flex-col gap-4 bg-card rounded-xl p-7 hover:bg-cardHover border border-borderColour duration-300">
                                 <div className="flex gap-3 items-start">
                                     <span className="text-xl mt-0.5">❓</span>
                                     <p className="font-bold text-lg text-accentSoft">{q}</p>
@@ -146,7 +146,7 @@ const Landing = () => {
                 </div>
 
                 {/* CTA */}
-                <div className="bg-card border border-borderColour rounded-2xl p-10 flex flex-col md:flex-row gap-10 items-center justify-between">
+                <div className="bg-card border border-borderColour rounded-xl p-10 flex flex-col md:flex-row gap-10 items-center justify-between">
                     <p className="md:w-[65%] text-xl font-semibold">
                         Get started with <span className="text-accentSoft font-black">Loan</span> and know your
                         eligibility before you walk into any bank. Whether it's a home, a car, your education,
@@ -166,7 +166,7 @@ const Landing = () => {
                             { name: 'Sneha Rao, Bengaluru', text: '"Applying for an education loan abroad was stressful. This platform told me exactly what I needed — co-applicant details, course fee limits, everything. Saved me hours of research."' },
                             { name: 'Vikram Singh, Delhi', text: '"I was rejected by two banks before I found out my FOIR was too high. Loan flagged this immediately. I cleared some dues and re-checked — eligible this time."' },
                         ].map(({ name, text }) => (
-                            <div key={name} className="flex flex-col gap-4 bg-card rounded-2xl p-7 hover:bg-cardHover border border-borderColour duration-300">
+                            <div key={name} className="flex flex-col gap-4 bg-card rounded-xl p-7 hover:bg-cardHover border border-borderColour duration-300">
                                 <div className="flex gap-3 items-center">
                                     <div className="w-9 h-9 rounded-full bg-button/20 border border-button flex items-center justify-center text-accentSoft font-bold">
                                         {name.charAt(0)}

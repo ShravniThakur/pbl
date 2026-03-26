@@ -12,7 +12,7 @@ import {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const INPUT_CLASS = `bg-black/30 border border-borderColour rounded-lg px-3 py-2 text-bodyText text-sm
+const INPUT_CLASS = `bg-white border border-borderColour rounded-lg px-3 py-2 text-bodyText text-sm
     focus:outline-none focus:border-button transition-colors duration-200 w-full`
 
 const EMPTY_CO_APPLICANT = {
@@ -177,7 +177,7 @@ const LoanCheck = () => {
             <form onSubmit={handleSubmit} className="flex flex-col gap-8">
 
                 {/* Loan Type + Amount */}
-                <div className="bg-card border border-borderColour rounded-2xl p-6">
+                <div className="bg-card border border-borderColour rounded-xl p-6">
                     <SectionHeader title="Loan Details" sub="What kind of loan are you applying for?" />
                     <div className="grid grid-cols-2 gap-4">
                         <Field label="Loan Type">
@@ -200,7 +200,7 @@ const LoanCheck = () => {
 
                 {/* ── Personal Loan ── */}
                 {loanType === 'Personal Loan' && (
-                    <div className="bg-card border border-borderColour rounded-2xl p-6">
+                    <div className="bg-card border border-borderColour rounded-xl p-6">
                         <SectionHeader title="Personal Loan Details" sub="Employment details for personal loan assessment" />
                         <div className="grid grid-cols-2 gap-4">
                             <Input label="Employer Name" type="text" value={details.employerName ?? ''} onChange={e => set('employerName', e.target.value)} required />
@@ -213,7 +213,7 @@ const LoanCheck = () => {
 
                 {/* ── Home Loan ── */}
                 {loanType === 'Home Loan' && (
-                    <div className="bg-card border border-borderColour rounded-2xl p-6">
+                    <div className="bg-card border border-borderColour rounded-xl p-6">
                         <SectionHeader title="Home Loan Details" sub="Property and collateral details" />
                         <div className="grid grid-cols-2 gap-4">
                             <Input label="Property Value (₹)" type="number" min={1} value={details.propertyValue ?? ''} onChange={e => set('propertyValue', e.target.value)} required />
@@ -234,7 +234,7 @@ const LoanCheck = () => {
 
                 {/* ── Education Loan ── */}
                 {isEducationLoan && (
-                    <div className="bg-card border border-borderColour rounded-2xl p-6">
+                    <div className="bg-card border border-borderColour rounded-xl p-6">
                         <SectionHeader title="Education Loan Details" sub="Course and institution details" />
                         <div className="grid grid-cols-2 gap-4">
                             <Select label="Course Type" options={COURSE_TYPE} placeholder="Select" value={details.courseType ?? ''} onChange={e => set('courseType', e.target.value)} required />
@@ -262,7 +262,7 @@ const LoanCheck = () => {
 
                 {/* ── Vehicle Loan ── */}
                 {loanType === 'Vehicle Loan' && (
-                    <div className="bg-card border border-borderColour rounded-2xl p-6">
+                    <div className="bg-card border border-borderColour rounded-xl p-6">
                         <SectionHeader title="Vehicle Loan Details" sub="Vehicle purchase details" />
                         <div className="grid grid-cols-2 gap-4">
                             <Input label="Vehicle Price (₹)" type="number" min={1} value={details.vehiclePrice ?? ''} onChange={e => set('vehiclePrice', e.target.value)} required />
@@ -276,7 +276,7 @@ const LoanCheck = () => {
 
                 {/* ── Business Loan ── */}
                 {loanType === 'Business Loan' && (
-                    <div className="bg-card border border-borderColour rounded-2xl p-6">
+                    <div className="bg-card border border-borderColour rounded-xl p-6">
                         <SectionHeader title="Business Loan Details" sub="Your business financials" />
                         <div className="grid grid-cols-2 gap-4">
                             <Select label="Business Type" options={BUSINESS_TYPE} placeholder="Select" value={details.businessType ?? ''} onChange={e => set('businessType', e.target.value)} required />
@@ -290,7 +290,7 @@ const LoanCheck = () => {
 
                 {/* ── Co-Applicant ── */}
                 {loanType && (
-                    <div className="bg-card border border-borderColour rounded-2xl p-6">
+                    <div className="bg-card border border-borderColour rounded-xl p-6">
                         <div className="flex items-center justify-between border-b border-borderColour pb-3 mb-4">
                             <div>
                                 <p className="text-lg font-black text-heading">

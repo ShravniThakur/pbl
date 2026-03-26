@@ -16,7 +16,7 @@ const EMPTY = {
     creditScore: '', recentLoanInquiries: [], paymentHistoryFlag: 'Clean'
 }
 
-const INPUT_CLASS = `bg-black/30 border border-borderColour rounded-lg px-3 py-2 text-bodyText text-sm
+const INPUT_CLASS = `bg-white border border-borderColour rounded-lg px-3 py-2 text-bodyText text-sm
     focus:outline-none focus:border-button transition-colors duration-200
     disabled:opacity-50 disabled:cursor-not-allowed w-full`
 
@@ -335,7 +335,7 @@ const FinancialProfile = () => {
             <form onSubmit={handleSubmit} className="flex flex-col gap-8">
 
                 {/* Personal Details */}
-                <div className="bg-card border border-borderColour rounded-2xl p-6">
+                <div className="bg-card border border-borderColour rounded-xl p-6">
                     <SectionHeader title="Personal Details" sub="Basic demographic information" />
                     <div className="grid grid-cols-2 gap-4">
                         <Input isReadonly={isReadonly} label="Age" type="number" min={18} max={100} value={form.age} onChange={e => set('age', e.target.value)} required />
@@ -348,7 +348,7 @@ const FinancialProfile = () => {
                 </div>
 
                 {/* Employment */}
-                <div className="bg-card border border-borderColour rounded-2xl p-6">
+                <div className="bg-card border border-borderColour rounded-xl p-6">
                     <SectionHeader title="Employment" sub="Your current employment situation" />
                     <div className="grid grid-cols-2 gap-4">
                         <Select
@@ -394,7 +394,7 @@ const FinancialProfile = () => {
                 </div>
 
                 {/* Credit Profile */}
-                <div className="bg-card border border-borderColour rounded-2xl p-6">
+                <div className="bg-card border border-borderColour rounded-xl p-6">
                     <SectionHeader title="Credit Profile" sub="Credit health indicators" />
                     <div className="grid grid-cols-2 gap-4">
                         <Input isReadonly={isReadonly} label="Credit Score (0–900)" type="number" min={0} max={900} value={form.creditScore} onChange={e => set('creditScore', e.target.value)} required />
@@ -403,12 +403,12 @@ const FinancialProfile = () => {
                 </div>
 
                 {/* Existing EMIs */}
-                <div className="bg-card border border-borderColour rounded-2xl p-6">
+                <div className="bg-card border border-borderColour rounded-xl p-6">
                     <SectionHeader title="Existing EMIs" sub="Current EMI obligations" />
                     <div className="flex flex-col gap-2 mb-4">
                         {form.existingEmis.length === 0 && <p className="text-sm text-bodyText/40 italic">No EMIs added.</p>}
                         {form.existingEmis.map((e) => (
-                            <div key={e._id} className="flex items-center justify-between bg-black/30 border border-borderColour rounded-lg px-4 py-2 text-sm">
+                            <div key={e._id} className="flex items-center justify-between bg-white border border-borderColour rounded-lg px-4 py-2 text-sm">
                                 <p>₹{e.monthlyAmount}/mo · {e.remainingTenureMonths} months left</p>
                                 {!isReadonly && (
                                     <button type="button" onClick={() => set('existingEmis', form.existingEmis.filter(x => x._id !== e._id))} className="text-danger text-xs font-bold">Remove</button>
@@ -435,12 +435,12 @@ const FinancialProfile = () => {
                 </div>
 
                 {/* Credit Card Dues */}
-                <div className="bg-card border border-borderColour rounded-2xl p-6">
+                <div className="bg-card border border-borderColour rounded-xl p-6">
                     <SectionHeader title="Credit Card Dues" sub="Outstanding credit card balances" />
                     <div className="flex flex-col gap-2 mb-4">
                         {form.creditCardDues.length === 0 && <p className="text-sm text-bodyText/40 italic">No credit card dues added.</p>}
                         {form.creditCardDues.map((c) => (
-                            <div key={c._id} className="flex items-center justify-between bg-black/30 border border-borderColour rounded-lg px-4 py-2 text-sm">
+                            <div key={c._id} className="flex items-center justify-between bg-white border border-borderColour rounded-lg px-4 py-2 text-sm">
                                 <p>Balance: ₹{c.outstandingBalance} · Min Due: ₹{c.minimumDue}</p>
                                 {!isReadonly && (
                                     <button type="button" onClick={() => set('creditCardDues', form.creditCardDues.filter(x => x._id !== c._id))} className="text-danger text-xs font-bold">Remove</button>
@@ -467,12 +467,12 @@ const FinancialProfile = () => {
                 </div>
 
                 {/* Other Loans */}
-                <div className="bg-card border border-borderColour rounded-2xl p-6">
+                <div className="bg-card border border-borderColour rounded-xl p-6">
                     <SectionHeader title="Other Loans" sub="Any other active loans" />
                     <div className="flex flex-col gap-2 mb-4">
                         {form.otherLoans.length === 0 && <p className="text-sm text-bodyText/40 italic">No other loans added.</p>}
                         {form.otherLoans.map((l) => (
-                            <div key={l._id} className="flex items-center justify-between bg-black/30 border border-borderColour rounded-lg px-4 py-2 text-sm">
+                            <div key={l._id} className="flex items-center justify-between bg-white border border-borderColour rounded-lg px-4 py-2 text-sm">
                                 <p>₹{l.principalOutstanding} outstanding · ₹{l.monthlyEMI}/mo · {l.remainingTenureMonths}mo · {l.interestRate}%</p>
                                 {!isReadonly && (
                                     <button type="button" onClick={() => set('otherLoans', form.otherLoans.filter(x => x._id !== l._id))} className="text-danger text-xs font-bold">Remove</button>
@@ -505,12 +505,12 @@ const FinancialProfile = () => {
                 </div>
 
                 {/* Recent Loan Inquiries */}
-                <div className="bg-card border border-borderColour rounded-2xl p-6">
+                <div className="bg-card border border-borderColour rounded-xl p-6">
                     <SectionHeader title="Recent Loan Inquiries" sub="Loan applications in the last 12 months" />
                     <div className="flex flex-col gap-2 mb-4">
                         {form.recentLoanInquiries.length === 0 && <p className="text-sm text-bodyText/40 italic">No recent inquiries added.</p>}
                         {form.recentLoanInquiries.map((r) => (
-                            <div key={r._id} className="flex items-center justify-between bg-black/30 border border-borderColour rounded-lg px-4 py-2 text-sm">
+                            <div key={r._id} className="flex items-center justify-between bg-white border border-borderColour rounded-lg px-4 py-2 text-sm">
                                 <p>{r.monthsAgo} months ago · {r.status}</p>
                                 {!isReadonly && (
                                     <button type="button" onClick={() => set('recentLoanInquiries', form.recentLoanInquiries.filter(x => x._id !== r._id))} className="text-danger text-xs font-bold">Remove</button>

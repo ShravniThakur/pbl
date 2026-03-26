@@ -67,7 +67,8 @@ class LoanInput(BaseModel):
 
 class PredictionResponse(BaseModel):
     probability:   float
-    score:         float
+    score:         float   # eligibility score  (0–100, higher = more eligible)
+    risk_score:    float   # risk score          (0–100, higher = more risky)
     risk_category: str
     verdict:       str
     confidence:    str
@@ -86,16 +87,23 @@ def model_info():
 @app.post("/predict", response_model=PredictionResponse)
 def predict(data: LoanInput):
     try:
-        df        = preprocess_input(data.dict())
-        df_enc    = encoder.transform_df(df)          # str → int
-        X_scaled  = scaler.transform(df_enc)          # scale numerics
-        prob      = float(pipeline.predict_proba(X_scaled)[0][1])
-        score     = round(prob * 100, 2)
+        df         = preprocess_input(data.dict())
+        df_enc     = encoder.transform_df(df)          # str → int
+        X_scaled   = scaler.transform(df_enc)          # scale numerics
+        prob       = float(pipeline.predict_proba(X_scaled)[0][1])
+
+        # Eligibility score: high prob → high score (good)
+        score      = round(prob * 100, 2)
+
+        # Risk score: inverse of eligibility (high prob → low risk)
+        risk_score = round((1 - prob) * 100, 2)
+
         return PredictionResponse(
             probability   = round(prob, 4),
             score         = score,
-            risk_category = get_risk_category(score),
-            verdict       = get_verdict(score),
+            risk_score    = risk_score,
+            risk_category = get_risk_category(risk_score),   # uses risk_score
+            verdict       = get_verdict(score),              # uses eligibility score
             confidence    = get_confidence_label(prob),
             model_version = meta.get("version", "1.0.0"),
         )

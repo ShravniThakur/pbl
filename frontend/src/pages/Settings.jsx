@@ -65,7 +65,7 @@ const Settings = () => {
 
     useEffect(() => { fetchUser() }, [fetchUser])
 
-    const inputClass = `bg-black/30 border border-borderColour rounded-lg px-4 py-2.5 text-bodyText text-sm focus:outline-none focus:border-button transition-colors duration-200 w-full`
+    const inputClass = `bg-white border border-borderColour rounded-lg px-4 py-2.5 text-bodyText text-sm focus:outline-none focus:border-button transition-colors duration-200 w-full`
 
     const Field = ({ label, children }) => (
         <div className="flex flex-col gap-1">
@@ -200,7 +200,7 @@ const Settings = () => {
             </div>
 
             {/* Update Profile */}
-            <div className="bg-card border border-borderColour rounded-2xl p-6">
+            <div className="bg-card border border-borderColour rounded-xl p-6">
                 <SectionHeader title="Profile" sub="Update your name, email or profile picture" />
                 <form onSubmit={handleProfileUpdate} className="flex flex-col gap-5">
 
@@ -260,7 +260,7 @@ const Settings = () => {
             </div>
 
             {/* Change Password */}
-            <div className="bg-card border border-borderColour rounded-2xl p-6">
+            <div className="bg-card border border-borderColour rounded-xl p-6">
                 <SectionHeader title="Change Password" sub="Choose a strong password to keep your account secure" />
                 <form onSubmit={handlePasswordChange} className="flex flex-col gap-5">
 
@@ -299,7 +299,7 @@ const Settings = () => {
             </div>
 
             {/* Danger Zone */}
-            <div className="bg-card border border-danger/20 rounded-2xl p-6">
+            <div className="bg-card border border-danger/20 rounded-xl p-6">
                 <SectionHeader title="Danger Zone" sub="Permanently delete your account and all associated data" />
                 <form onSubmit={handleDeleteAccount} className="flex flex-col gap-5">
 

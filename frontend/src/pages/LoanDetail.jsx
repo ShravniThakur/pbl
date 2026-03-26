@@ -138,7 +138,7 @@ const LoanDetail = () => {
             </div>
 
             {/* Result Banner */}
-            <div className={`rounded-2xl border-2 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${eligible ? 'bg-success/5 border-success/30' : 'bg-danger/5 border-danger/30'}`}>
+            <div className={`rounded-xl border-2 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${eligible ? 'bg-success/5 border-success/30' : 'bg-danger/5 border-danger/30'}`}>
                 <div>
                     <p className={`text-3xl font-black ${eligible ? 'text-success' : 'text-danger'}`}>
                         {eligible ? '✓ Eligible' : '✗ Not Eligible'}
@@ -163,7 +163,7 @@ const LoanDetail = () => {
 
             {/* Rejection Reasons */}
             {!eligible && results?.rejectionReasons?.length > 0 && (
-                <div className="bg-card border border-borderColour rounded-2xl p-6">
+                <div className="bg-card border border-borderColour rounded-xl p-6">
                     <p className="text-lg font-black text-heading mb-4">Why You Were Rejected</p>
                     <div className="flex flex-col gap-3">
                         {results.rejectionReasons.map((r, i) => (
@@ -178,11 +178,11 @@ const LoanDetail = () => {
 
             {/* Approved Offer */}
             {eligible && (
-                <div className="bg-card border border-borderColour rounded-2xl p-6">
+                <div className="bg-card border border-borderColour rounded-xl p-6">
                     <p className="text-lg font-black text-heading mb-5">Approved Offer</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         {offerCards.map(({ label, value }) => (
-                            <div key={label} className="bg-black/30 border border-borderColour rounded-xl p-4">
+                            <div key={label} className="bg-slate-50 border border-borderColour rounded-xl p-4">
                                 <p className="text-xs text-bodyText/50 uppercase tracking-wide mb-2">{label}</p>
                                 <p className="text-lg font-black text-accentSoft">{value}</p>
                             </div>
@@ -197,7 +197,7 @@ const LoanDetail = () => {
                                     <p className="text-xs text-bodyText/50 font-semibold uppercase tracking-wide">Eligibility Score</p>
                                     <p className="text-sm font-black text-accentSoft">{results.eligibilityScore} / 100</p>
                                 </div>
-                                <div className="h-2 bg-black/40 rounded-full overflow-hidden border border-borderColour">
+                                <div className="h-2 bg-slate-100 rounded-full overflow-hidden border border-borderColour">
                                     <div className="h-full bg-button rounded-full transition-all duration-500" style={{ width: `${results.eligibilityScore}%` }} />
                                 </div>
                             </div>
@@ -208,7 +208,7 @@ const LoanDetail = () => {
                                         {results.riskScore} / 100
                                     </p>
                                 </div>
-                                <div className="h-2 bg-black/40 rounded-full overflow-hidden border border-borderColour">
+                                <div className="h-2 bg-slate-100 rounded-full overflow-hidden border border-borderColour">
                                     <div className={`h-full rounded-full transition-all duration-500 ${riskScoreBarColor(results.riskScore)}`} style={{ width: `${results.riskScore}%` }} />
                                 </div>
                             </div>
@@ -218,7 +218,7 @@ const LoanDetail = () => {
             )}
 
             {/* Loan Details */}
-            <div className="bg-card border border-borderColour rounded-2xl p-6">
+            <div className="bg-card border border-borderColour rounded-xl p-6">
                 <p className="text-lg font-black text-heading mb-4">Application Details</p>
                 <Row label="Loan Type" value={loanType} />
                 <Row label="Requested Amount" value={fmt(requestedLoanAmount)} />
@@ -242,7 +242,7 @@ const LoanDetail = () => {
 
             {/* ML Result */}
             {check?.mlResult && (
-                <div className="bg-card border border-borderColour rounded-2xl p-6">
+                <div className="bg-card border border-borderColour rounded-xl p-6">
                     <p className="text-lg font-black text-heading mb-5">ML Prediction</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {[
@@ -251,7 +251,7 @@ const LoanDetail = () => {
                             { label: 'Risk',        value: check.mlResult?.riskCategory || 'N/A' },
                             { label: 'Confidence',  value: check.mlResult?.confidence || 'N/A' },
                         ].map(({ label, value }) => (
-                            <div key={label} className="bg-black/30 border border-borderColour rounded-xl p-4">
+                            <div key={label} className="bg-slate-50 border border-borderColour rounded-xl p-4">
                                 <p className="text-xs text-bodyText/50 uppercase tracking-wide mb-2">{label}</p>
                                 <p className="text-base font-black text-accentSoft">{value}</p>
                             </div>
@@ -262,7 +262,7 @@ const LoanDetail = () => {
 
             {/* SHAP Explanation */}
             {check?.mlExplanation && (
-                <div className="bg-card border border-borderColour rounded-2xl p-6">
+                <div className="bg-card border border-borderColour rounded-xl p-6">
                     <p className="text-lg font-black text-heading mb-2">Why This Decision?</p>
                     <p className="text-sm text-bodyText/60 mb-5">{check.mlExplanation?.summary}</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

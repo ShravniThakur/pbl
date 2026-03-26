@@ -10,11 +10,11 @@ const ProtectedRoutes = () => {
     if (!token) return <Navigate to='/login' replace></Navigate>
     return (
         <>
-            <div className='fixed z-50 h-18 w-full bg-black'>
+            <div className='fixed z-50 h-18 w-full bg-white border-b border-borderColour'>
                 <Navbar></Navbar>
             </div>
             <div className='flex'>
-                <div className='bg-black h-full fixed z-50 left-0 top-18 w-13 sm:w-43'>
+                <div className='bg-white border-r border-borderColour h-full fixed z-50 left-0 top-18 w-13 sm:w-43'>
                     <Sidebar></Sidebar>
                 </div>
                 <div className='flex-1 min-w-0 mt-18 ml-13 sm:ml-43'>

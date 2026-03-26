@@ -135,7 +135,7 @@ const LoanHistory = () => {
                     { label: 'Eligible', value: eligibleCount, color: 'text-success' },
                     { label: 'Rejected', value: rejectedCount, color: 'text-danger' },
                 ].map(({ label, value, color }) => (
-                    <div key={label} className="bg-card border border-borderColour rounded-2xl p-4 text-center hover:bg-cardHover duration-300">
+                    <div key={label} className="bg-card border border-borderColour rounded-xl p-4 text-center hover:bg-cardHover duration-300">
                         <p className={`text-2xl font-black ${color}`}>{value}</p>
                         <p className="text-xs text-bodyText/60 mt-1">{label}</p>
                     </div>
@@ -144,7 +144,7 @@ const LoanHistory = () => {
 
             {/* Table */}
             {filtered.length === 0 ? (
-                <div className="bg-card border border-borderColour rounded-2xl p-12 text-center">
+                <div className="bg-card border border-borderColour rounded-xl p-12 text-center">
                     <p className="text-bodyText/50 mb-4">
                         {checks.length === 0 ? 'No eligibility checks yet.' : 'No checks match your filters.'}
                     </p>
@@ -158,7 +158,7 @@ const LoanHistory = () => {
                     )}
                 </div>
             ) : (
-                <div className="border border-borderColour rounded-2xl overflow-hidden">
+                <div className="border border-borderColour rounded-xl overflow-hidden">
                     {/* Desktop header */}
                     <div className="hidden md:grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr_0.5fr] gap-3 font-bold p-3 bg-card border-b border-borderColour text-sm text-accentSoft">
                         <p>Loan Type</p>

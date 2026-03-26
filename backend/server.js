@@ -15,11 +15,17 @@ const { verifyLoanOnChain } = require('./services/blockchainservice');
 const app = express()
 const port = process.env.PORT
 connectDatabase()
+
 // connectCloudinary()
 
 // middlewares 
+// middlewares 
+app.use(cors({
+  origin: 'http://localhost:5556',
+  credentials: true
+}))
 app.use(express.json())
-app.use(cors())
+app.use(express.json())
 
 // routes
 app.use('/user',userRouter)
