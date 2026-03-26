@@ -173,7 +173,16 @@ cd backend
 npm install
 ```
 
-Create `backend/.env`:
+Copy the example env file and fill in your personal values:
+```bash
+# macOS
+cp .env.example .env
+
+# Windows
+copy .env.example .env
+```
+
+`backend/.env.example` is committed to the repo with shared values pre-filled. Your final `backend/.env` should look like this:
 ```env
 PORT=5000
 MONGODB_URL=mongodb://localhost:27017/loan_eligibility
@@ -184,15 +193,35 @@ ML_SERVICE_URL=http://localhost:8000
 SHAP_SERVICE_URL=http://localhost:8001
 
 # Blockchain — Pinata (IPFS)
+# Get your free JWT at https://app.pinata.cloud → API Keys
 PINATA_JWT=your_pinata_jwt_here
 
 # Blockchain — Ethereum Sepolia
+# Generate a wallet and get test ETH from https://faucet.sepolia.dev
 PRIVATE_KEY=your_wallet_private_key_here
 RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
-CONTRACT_ADDRESS=your_deployed_contract_address_here
+CONTRACT_ADDRESS=0xa09d5BeF09bBB5ADC2CC4342ea74f1E21eE71314
 ```
 
-> ⚠️ Never commit your `PRIVATE_KEY` or `PINATA_JWT` to version control. Keep `.env` in `.gitignore`.
+> ⚠️ `CONTRACT_ADDRESS` and `RPC_URL` are the same for all team members — do not change them. Each team member must supply their own `PRIVATE_KEY` and `PINATA_JWT`. Never commit either of these to version control.
+
+#### Setting up your Sepolia wallet (first time only)
+
+1. Install [MetaMask](https://metamask.io) and create a new wallet, or generate one in Node:
+   ```js
+   const { ethers } = require("ethers");
+   const wallet = ethers.Wallet.createRandom();
+   console.log("Address:", wallet.address);
+   console.log("Private Key:", wallet.privateKey);
+   ```
+2. Get free test ETH from the [Sepolia faucet](https://faucet.sepolia.dev) using your wallet address
+3. Paste the private key into `PRIVATE_KEY` in your `.env`
+
+#### Setting up your Pinata JWT (first time only)
+
+1. Sign up for free at [app.pinata.cloud](https://app.pinata.cloud)
+2. Go to **API Keys** → **New Key** → enable `pinFileToIPFS` → generate
+3. Paste the JWT into `PINATA_JWT` in your `.env`
 
 ---
 
