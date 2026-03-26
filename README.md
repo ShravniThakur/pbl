@@ -1,6 +1,6 @@
 # 🏦 LoanSense — AI-Powered Loan Eligibility Advisor
 
-> An intelligent loan eligibility assessment platform combining rule-based decision engines, XGBoost ML scoring, and SHAP explainability — built as a full-stack MERN + Python microservices project.
+> An intelligent loan eligibility assessment platform combining rule-based decision engines, XGBoost ML scoring, SHAP explainability, and blockchain-anchored audit trails — built as a full-stack MERN + Python microservices project.
 
 ---
 
@@ -12,6 +12,7 @@ LoanSense helps users understand their loan eligibility **before** they apply to
 - 🤖 **ML-based probability scoring** (XGBoost trained on synthetic financial data)
 - 🔍 **SHAP explainability** — "Why was I approved/rejected?" with top contributing factors
 - 📊 **Approved loan offer** — max amount, tenure, interest rate, EMI
+- ⛓️ **Blockchain audit trail** — every decision pinned to IPFS and anchored on Ethereum Sepolia
 
 Supports 5 loan types: Personal, Home, Education, Vehicle, Business.
 
@@ -30,6 +31,7 @@ Supports 5 loan types: Personal, Home, Education, Vehicle, Business.
 │               (MongoDB, port 5000)                       │
 │  ┌─────────────────────────────────────────────────┐    │
 │  │  Rule Engine → ML Service → SHAP Service        │    │
+│  │       → Blockchain Service (IPFS + Sepolia)     │    │
 │  └──────┬──────────────────┬───────────────────────┘    │
 └─────────┼──────────────────┼────────────────────────────┘
           │                  │
@@ -48,6 +50,12 @@ Supports 5 loan types: Personal, Home, Education, Vehicle, Business.
 pbl/
 ├── frontend/                   # React + Vite + Tailwind
 │   └── src/
+│       ├── components/
+│       │   ├── BlockchainVerifier.jsx  ← verify tx on Etherscan
+│       │   ├── Sidebar.jsx
+│       │   ├── Navbar.jsx
+│       │   ├── ProtectedRoutes.jsx
+│       │   └── PublicRoutes.jsx
 │       ├── pages/
 │       │   ├── Landing.jsx
 │       │   ├── Login.jsx
@@ -55,7 +63,7 @@ pbl/
 │       │   ├── Dashboard.jsx
 │       │   ├── FinancialProfile.jsx
 │       │   ├── LoanCheck.jsx       ← multi-step loan form
-│       │   ├── LoanDetail.jsx      ← results + SHAP viz
+│       │   ├── LoanDetail.jsx      ← results + SHAP viz + blockchain info
 │       │   ├── LoanHistory.jsx
 │       │   └── Settings.jsx
 │       ├── context/AppContext.jsx
@@ -81,7 +89,8 @@ pbl/
 │   │   ├── user_service.js
 │   │   ├── loanEligibilityService.js  ← rule engine + ML integration
 │   │   ├── financialProfile_service.js
-│   │   └── mlservice.js               ← calls ML + SHAP microservices
+│   │   ├── mlservice.js               ← calls ML + SHAP microservices
+│   │   └── blockchainservice.js       ← IPFS (Pinata) + Ethereum Sepolia
 │   ├── validators/
 │   ├── middlewares/
 │   ├── constants/enums.js
@@ -144,11 +153,13 @@ pip install -r requirements.txt
 
 If you need to retrain the model:
 ```bash
-python3 generate_synthetic_data.py   # macOS
-python  generate_synthetic_data.py   # Windows
+# macOS
+python3 generate_synthetic_data.py
+python3 model/train_model.py
 
-python3 model/train_model.py         # macOS
-python  model/train_model.py         # Windows
+# Windows
+python generate_synthetic_data.py
+python model/train_model.py
 ```
 
 > ⚠️ Retraining regenerates `model.pkl`, `encoder.pkl`, `scaler.pkl`, and `shap_explainer.pkl` inside `ml-service/model/`. All four files must be present for the services to start.
@@ -171,7 +182,17 @@ JWT_EXPIRES_IN=7d
 FRONTEND_URL=http://localhost:5556
 ML_SERVICE_URL=http://localhost:8000
 SHAP_SERVICE_URL=http://localhost:8001
+
+# Blockchain — Pinata (IPFS)
+PINATA_JWT=your_pinata_jwt_here
+
+# Blockchain — Ethereum Sepolia
+PRIVATE_KEY=your_wallet_private_key_here
+RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
+CONTRACT_ADDRESS=your_deployed_contract_address_here
 ```
+
+> ⚠️ Never commit your `PRIVATE_KEY` or `PINATA_JWT` to version control. Keep `.env` in `.gitignore`.
 
 ---
 
@@ -323,45 +344,16 @@ Hard rejection rules run **before** ML scoring:
 
 ---
 
-## 🛡️ Security
+## ⛓️ Blockchain Audit & Data Integrity
 
-- JWT authentication (HTTP header based)
-- bcrypt password hashing
-- Zod schema validation on all inputs
-- CORS restricted to frontend origin
+Every loan eligibility check and its corresponding SHAP explanation (`summary`, `topPositive`, `topNegative`, `baseValue`) is anchored to the **Ethereum Sepolia Testnet** via **IPFS**. This ensures the decision logic is immutable and verifiable.
 
----
+**The blockchain integration provides:**
+- **Decentralized Storage:** Full result metadata is pinned to IPFS via Pinata
+- **On-Chain Anchoring:** The IPFS CID is stored in a Solidity smart contract for permanent auditing
+- **Tamper-Proof Verification:** Users receive a unique Transaction Hash per eligibility check, verifiable on Etherscan
 
-## 🧰 Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18, Vite 8, Tailwind CSS 4 |
-| Backend | Node.js, Express 5, MongoDB, Mongoose |
-| Auth | JWT, bcrypt |
-| Validation | Zod |
-| ML | XGBoost, scikit-learn, SHAP |
-| ML API | FastAPI, Uvicorn |
-| File Upload | Cloudinary, Multer |
-
----
-
-## ⚠️ Disclaimer
-
-> This is an **advisory system**, not a lender. All loan eligibility assessments are based on mock rules and a model trained on synthetic data. Results do not represent actual bank decisions. No real credit bureau data is used.
-
----
-
-## ⛓️ Blockchain Audit & Data Integrity (Live)
-
-Every loan eligibility check and its corresponding SHAP explanation data (`summary`, `topPositive`, `topNegative`, `baseValue`) is now anchored to the **Ethereum Sepolia Testnet** via **IPFS**. This ensures that the decision logic is immutable and verifiable.
-
-**The Blockchain Integration provides:**
-- **Decentralized Storage:** Full result metadata is pinned to IPFS via Pinata.
-- **On-Chain Anchoring:** The IPFS CID is stored in a Solidity smart contract for permanent auditing.
-- **Tamper-Proof Verification:** Users receive a unique Transaction Hash per eligibility check to verify their results on Etherscan.
-
-The `mlExplanation` object used for this decentralized anchor looks like:
+The `mlExplanation` object anchored on-chain looks like:
 
 ```json
 {
@@ -373,6 +365,37 @@ The `mlExplanation` object used for this decentralized anchor looks like:
   "ipfsHash": "QmfQh3D4wA5GQwm6bBstHXD2Ygi97C5WQ7yQ2a6Psj5wLB"
 }
 ```
+
+---
+
+## 🛡️ Security
+
+- JWT authentication (HTTP header based)
+- bcrypt password hashing
+- Zod schema validation on all inputs
+- CORS restricted to frontend origin
+- Blockchain private key and Pinata JWT stored in `.env` only — never committed to version control
+
+---
+
+## 🧰 Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18, Vite, Tailwind CSS |
+| Backend | Node.js, Express 5, MongoDB, Mongoose |
+| Auth | JWT, bcrypt |
+| Validation | Zod |
+| ML | XGBoost, scikit-learn, SHAP |
+| ML API | FastAPI, Uvicorn |
+| File Upload | Cloudinary, Multer |
+| Blockchain | Ethers.js v6, Ethereum Sepolia, Pinata IPFS |
+
+---
+
+## ⚠️ Disclaimer
+
+> This is an **advisory system**, not a lender. All loan eligibility assessments are based on mock rules and a model trained on synthetic data. Results do not represent actual bank decisions. No real credit bureau data is used.
 
 ---
 
