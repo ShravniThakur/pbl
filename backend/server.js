@@ -9,6 +9,8 @@ const connectDatabase = require('./config/mongodb')
 const userRouter = require('./routes/user_routes')
 const financialProfileRouter = require('./routes/financialProfile_routes')
 const loanEligibilityRouter = require('./routes/loanEligibilityCheck_routes')
+const adminRouter = require('./routes/admin_routes')
+const loanProductRouter = require('./routes/loanProduct_routes')
 
 const { verifyLoanOnChain } = require('./services/blockchainservice');
 // app config 
@@ -21,16 +23,18 @@ connectDatabase()
 // middlewares 
 // middlewares 
 app.use(cors({
-  origin: 'http://localhost:5556',
-  credentials: true
+    origin: 'http://localhost:5556',
+    credentials: true
 }))
 app.use(express.json())
 app.use(express.json())
 
 // routes
-app.use('/user',userRouter)
-app.use('/financial-profile',financialProfileRouter)
+app.use('/user', userRouter)
+app.use('/financial-profile', financialProfileRouter)
 app.use('/loan-eligibility', loanEligibilityRouter)
+app.use('/api/admin', adminRouter)
+app.use('/api/loan-products', loanProductRouter)
 
 app.get('/api/verify-loan/:id', async (req, res) => {
     try {
@@ -42,6 +46,6 @@ app.get('/api/verify-loan/:id', async (req, res) => {
 });
 
 // run server
-app.listen(port, ()=>{
+app.listen(port, () => {
     console.log('App running on port ' + port)
 })

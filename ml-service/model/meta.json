@@ -30,7 +30,7 @@
     "city_tier"
   ],
   "n_features": 11,
-  "trained_at": "2026-03-26T08:47:52.317991Z",
+  "trained_at": "2026-03-28T13:51:37.551863Z",
   "train_samples": 4000,
   "test_samples": 1000,
   "accuracy": 0.919,

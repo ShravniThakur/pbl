@@ -1,6 +1,6 @@
 # 🏦 LoanSense — AI-Powered Loan Eligibility Advisor
 
-> An intelligent loan eligibility assessment platform combining rule-based decision engines, XGBoost ML scoring, SHAP explainability, and blockchain-anchored audit trails — built as a full-stack MERN + Python microservices project.
+> An intelligent loan eligibility assessment platform combining rule-based decision engines, XGBoost ML scoring, SHAP explainability, blockchain-anchored audit trails, and a curated loan product recommendation engine — built as a full-stack MERN + Python microservices project.
 
 ---
 
@@ -13,6 +13,9 @@ LoanSense helps users understand their loan eligibility **before** they apply to
 - 🔍 **SHAP explainability** — "Why was I approved/rejected?" with top contributing factors
 - 📊 **Approved loan offer** — max amount, tenure, interest rate, EMI
 - ⛓️ **Blockchain audit trail** — every decision pinned to IPFS and anchored on Ethereum Sepolia
+- 🏦 **Loan product recommendations** — top 3 real-lender products matched to the user's approved offer
+- 🛍️ **Loan product browser** — users can browse all available products by type and lender
+- 🔐 **Admin portal** — admins can create, edit, activate/deactivate and delete loan products
 
 Supports 5 loan types: Personal, Home, Education, Vehicle, Business.
 
@@ -31,7 +34,8 @@ Supports 5 loan types: Personal, Home, Education, Vehicle, Business.
 │               (MongoDB, port 5000)                       │
 │  ┌─────────────────────────────────────────────────┐    │
 │  │  Rule Engine → ML Service → SHAP Service        │    │
-│  │       → Blockchain Service (IPFS + Sepolia)     │    │
+│  │  → Recommendation Engine                        │    │
+│  │  → Blockchain Service (IPFS + Sepolia)          │    │
 │  └──────┬──────────────────┬───────────────────────┘    │
 └─────────┼──────────────────┼────────────────────────────┘
           │                  │
@@ -52,6 +56,7 @@ pbl/
 │   └── src/
 │       ├── components/
 │       │   ├── BlockchainVerifier.jsx  ← verify tx on Etherscan
+│       │   ├── RecommendedProducts.jsx ← top 3 matched products on result page
 │       │   ├── Sidebar.jsx
 │       │   ├── Navbar.jsx
 │       │   ├── ProtectedRoutes.jsx
@@ -62,10 +67,13 @@ pbl/
 │       │   ├── Signup.jsx
 │       │   ├── Dashboard.jsx
 │       │   ├── FinancialProfile.jsx
-│       │   ├── LoanCheck.jsx       ← multi-step loan form
-│       │   ├── LoanDetail.jsx      ← results + SHAP viz + blockchain info
+│       │   ├── LoanCheck.jsx           ← multi-step loan form
+│       │   ├── LoanDetail.jsx          ← results + SHAP viz + blockchain + recommendations
+│       │   ├── LoanProducts.jsx        ← browse all loan products
 │       │   ├── LoanHistory.jsx
-│       │   └── Settings.jsx
+│       │   ├── Settings.jsx
+│       │   ├── AdminLogin.jsx          ← admin-only login
+│       │   └── AdminDashboard.jsx      ← loan product CRUD
 │       ├── context/AppContext.jsx
 │       └── utils/enums.js
 │
@@ -76,21 +84,28 @@ pbl/
 │   ├── controllers/
 │   │   ├── user_controller.js
 │   │   ├── loanEligibilityCheckController.js
-│   │   └── financialProfile_controller.js
+│   │   ├── financialProfile_controller.js
+│   │   ├── loanProductController.js    ← CRUD for loan products
+│   │   └── adminController.js          ← admin login
 │   ├── models/
 │   │   ├── User.js
 │   │   ├── FinancialProfile.js
-│   │   └── LoanEligibilityCheck.js
+│   │   ├── LoanEligibilityCheck.js     ← now includes recommendedProducts snapshot
+│   │   └── LoanProduct.js              ← lender product catalogue
 │   ├── routes/
 │   │   ├── user_routes.js
 │   │   ├── financialProfile_routes.js
-│   │   └── loanEligibilityCheck_routes.js
+│   │   ├── loanEligibilityCheck_routes.js
+│   │   ├── loanProduct_routes.js       ← public GET + admin-protected POST/PUT/DELETE
+│   │   └── admin_routes.js             ← POST /api/admin/login
 │   ├── services/
 │   │   ├── user_service.js
-│   │   ├── loanEligibilityService.js  ← rule engine + ML integration
+│   │   ├── loanEligibilityService.js   ← rule engine + ML + recommendation engine
 │   │   ├── financialProfile_service.js
-│   │   ├── mlservice.js               ← calls ML + SHAP microservices
-│   │   └── blockchainservice.js       ← IPFS (Pinata) + Ethereum Sepolia
+│   │   ├── loanProductService.js       ← CRUD + recommendation scoring
+│   │   ├── adminService.js             ← env-credential auth + JWT + requireAdmin middleware
+│   │   ├── mlservice.js                ← calls ML + SHAP microservices
+│   │   └── blockchainservice.js        ← IPFS (Pinata) + Ethereum Sepolia
 │   ├── validators/
 │   ├── middlewares/
 │   ├── constants/enums.js
@@ -182,7 +197,7 @@ cp .env.example .env
 copy .env.example .env
 ```
 
-`backend/.env.example` is committed to the repo with shared values pre-filled. Your final `backend/.env` should look like this:
+Your final `backend/.env` should look like this:
 ```env
 PORT=5000
 MONGODB_URL=mongodb://localhost:27017/loan_eligibility
@@ -191,6 +206,11 @@ JWT_EXPIRES_IN=7d
 FRONTEND_URL=http://localhost:5556
 ML_SERVICE_URL=http://localhost:8000
 SHAP_SERVICE_URL=http://localhost:8001
+
+# Admin portal credentials (no database entry — validated at runtime)
+ADMIN_EMAIL=admin@loansense.com
+ADMIN_PASSWORD=your_admin_password_here
+ADMIN_JWT_SECRET=a_separate_secret_for_admin_tokens
 
 # Blockchain — Pinata (IPFS)
 # Get your free JWT at https://app.pinata.cloud → API Keys
@@ -203,7 +223,7 @@ RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
 CONTRACT_ADDRESS=0xa09d5BeF09bBB5ADC2CC4342ea74f1E21eE71314
 ```
 
-> ⚠️ `CONTRACT_ADDRESS` and `RPC_URL` are the same for all team members — do not change them. Each team member must supply their own `PRIVATE_KEY` and `PINATA_JWT`. Never commit either of these to version control.
+> ⚠️ `CONTRACT_ADDRESS` and `RPC_URL` are the same for all team members — do not change them. Each team member must supply their own `PRIVATE_KEY` and `PINATA_JWT`. Never commit any of these to version control.
 
 #### Setting up your Sepolia wallet (first time only)
 
@@ -222,6 +242,16 @@ CONTRACT_ADDRESS=0xa09d5BeF09bBB5ADC2CC4342ea74f1E21eE71314
 1. Sign up for free at [app.pinata.cloud](https://app.pinata.cloud)
 2. Go to **API Keys** → **New Key** → enable `pinFileToIPFS` → generate
 3. Paste the JWT into `PINATA_JWT` in your `.env`
+
+#### Seeding loan products (first time only)
+
+Connect to your MongoDB shell and run the seed script to populate the product catalogue:
+
+```bash
+mongosh loan_eligibility
+```
+
+Then paste the `db.loanproducts.insertMany([...])` seed data (15 products across all 5 loan types — included separately).
 
 ---
 
@@ -282,24 +312,57 @@ cd frontend && npm run dev
 ```
 
 Open **http://localhost:5556** in your browser.
+Admin portal is at **http://localhost:5556/admin/login**.
 
 ---
 
 ## 🔌 API Reference
 
-### Backend (port 5000)
+### User & Auth (port 5000)
 
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
 | POST | `/user/sign-up` | ❌ | Register new user |
 | POST | `/user/login` | ❌ | Login, returns JWT |
 | GET | `/user/profile` | ✅ | Get user profile |
+| PATCH | `/user/profile` | ✅ | Update profile / photo |
+| PATCH | `/user/change-password` | ✅ | Change password |
+| DELETE | `/user/account` | ✅ | Delete account |
+
+### Financial Profile
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
 | POST | `/financial-profile` | ✅ | Create financial profile |
 | GET | `/financial-profile` | ✅ | Get financial profile |
 | PATCH | `/financial-profile` | ✅ | Update financial profile |
-| POST | `/loan-eligibility` | ✅ | Run eligibility check |
+| DELETE | `/financial-profile` | ✅ | Delete financial profile |
+
+### Loan Eligibility
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/loan-eligibility` | ✅ | Run eligibility check (triggers ML + SHAP + blockchain + recommendations) |
 | GET | `/loan-eligibility` | ✅ | Get all past checks |
-| GET | `/loan-eligibility/:id` | ✅ | Get single check |
+| GET | `/loan-eligibility/:id` | ✅ | Get single check with full results |
+| GET | `/api/verify-loan/:id` | ❌ | Verify blockchain record for a check |
+
+### Loan Products (Public)
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| GET | `/api/loan-products` | ❌ | All active products (optional `?loanType=`) |
+| GET | `/api/loan-products/:id` | ❌ | Single product |
+
+### Loan Products (Admin)
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/api/admin/login` | ❌ | Admin login, returns admin JWT |
+| GET | `/api/loan-products/admin/all` | 🔐 Admin | All products including inactive |
+| POST | `/api/loan-products/admin` | 🔐 Admin | Create product |
+| PUT | `/api/loan-products/admin/:id` | 🔐 Admin | Update product |
+| DELETE | `/api/loan-products/admin/:id` | 🔐 Admin | Delete product |
 
 ### ML Service (port 8000)
 
@@ -315,6 +378,45 @@ Open **http://localhost:5556** in your browser.
 |--------|-------|-------------|
 | POST | `/explain` | Returns SHAP feature contributions |
 | GET | `/health` | Liveness check |
+
+---
+
+## 🏦 Loan Product Recommendations
+
+After every **eligible** loan check, the recommendation engine runs automatically and returns the top 3 most suitable products from the catalogue.
+
+### How matching works
+
+**Hard filters** (all must pass):
+- `loanType` matches the check
+- `minAmount ≤ approvedAmount ≤ maxAmount`
+- `minCreditScore ≤ user creditScore`
+- `minMonthlyIncome ≤ user monthlyNetIncome`
+- `isActive === true`
+
+**Fit score** (0–100) is computed from three weighted factors:
+
+| Factor | Weight | Logic |
+|--------|--------|-------|
+| Rate fit | 50% | Lower `minInterestRate` relative to other candidates scores higher |
+| Amount fit | 30% | Product range centered on the approved amount scores higher |
+| Tenure flex | 20% | More headroom above the approved tenure scores higher |
+
+Products are sorted by fit score and the top 3 are **snapshotted** onto the `LoanEligibilityCheck` document — so recommendations are frozen at check time and never change even if products are later edited or deleted.
+
+---
+
+## 🔐 Admin Portal
+
+The admin portal lives at `/admin/login` and is completely isolated from the user authentication system — it uses a separate JWT secret and reads credentials from environment variables only (no admin collection in the database).
+
+**Admin capabilities:**
+- Create loan products with full details (lender info, rate/amount/tenure ranges, eligibility criteria, features)
+- Edit any product
+- Toggle active/inactive status (inactive products are hidden from users and excluded from recommendations)
+- Delete products
+
+Admin sessions do not interfere with user sessions.
 
 ---
 
@@ -382,14 +484,17 @@ Every loan eligibility check and its corresponding SHAP explanation (`summary`, 
 - **On-Chain Anchoring:** The IPFS CID is stored in a Solidity smart contract for permanent auditing
 - **Tamper-Proof Verification:** Users receive a unique Transaction Hash per eligibility check, verifiable on Etherscan
 
-The `mlExplanation` object anchored on-chain looks like:
+The audit payload anchored on-chain looks like:
 
 ```json
 {
-  "summary": "Your application looks strong. Key strengths: Credit Score and Monthly Income.",
-  "topPositive": [{ "feature": "credit_score", "label": "Credit Score", "shap_value": 0.42, "direction": "positive", "magnitude": "high" }],
-  "topNegative": [{ "feature": "dti_ratio", "label": "Debt-to-Income Ratio", "shap_value": -0.18, "direction": "negative", "magnitude": "medium" }],
-  "baseValue": 0.48,
+  "userID": "...",
+  "timestamp": "2025-01-01T00:00:00.000Z",
+  "loanType": "Personal Loan",
+  "requestedAmount": 500000,
+  "eligible": true,
+  "mlVerdict": "Approved",
+  "shapSummary": "Your application looks strong. Key strengths: Credit Score and Monthly Income.",
   "blockchainTxHash": "0x621b557a5cd8d839e98dd0062ce1cb172de4bd91f1b84699eb56945ba1088349",
   "ipfsHash": "QmfQh3D4wA5GQwm6bBstHXD2Ygi97C5WQ7yQ2a6Psj5wLB"
 }
@@ -399,7 +504,8 @@ The `mlExplanation` object anchored on-chain looks like:
 
 ## 🛡️ Security
 
-- JWT authentication (HTTP header based)
+- JWT authentication (HTTP header based) for users; separate JWT for admins
+- Admin credentials stored in `.env` only — no admin collection in the database
 - bcrypt password hashing
 - Zod schema validation on all inputs
 - CORS restricted to frontend origin
@@ -424,7 +530,7 @@ The `mlExplanation` object anchored on-chain looks like:
 
 ## ⚠️ Disclaimer
 
-> This is an **advisory system**, not a lender. All loan eligibility assessments are based on mock rules and a model trained on synthetic data. Results do not represent actual bank decisions. No real credit bureau data is used.
+> This is an **advisory system**, not a lender. All loan eligibility assessments are based on mock rules and a model trained on synthetic data. Results do not represent actual bank decisions. No real credit bureau data is used. Loan products listed are for informational purposes only.
 
 ---
 

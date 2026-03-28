@@ -43,6 +43,26 @@ const coApplicantSchema = new mongoose.Schema({
     isPrimaryEarner: { type: Boolean, default: false }
 }, { _id: false })
 
+// ── Embedded snapshot of a recommended product ─────────────────────────────────
+// We store a snapshot (not a ref) so the recommendation is frozen at check time
+// even if the product is later edited or deleted.
+const recommendedProductSchema = new mongoose.Schema({
+    productId:       { type: mongoose.Schema.Types.ObjectId, ref: 'LoanProduct' },
+    bankName:        String,
+    productName:     String,
+    logoUrl:         { type: String, default: null },
+    description:     String,
+    features:        [String],
+    loanType:        String,
+    minAmount:       Number,
+    maxAmount:       Number,
+    minInterestRate: Number,
+    maxInterestRate: Number,
+    minTenureMonths: Number,
+    maxTenureMonths: Number,
+    fitScore:        Number,   // 0–100, computed by recommendation engine
+}, { _id: false })
+
 const LoanEligibilityCheckSchema = new mongoose.Schema({
 
     userID: { type: String, required: true },
@@ -56,7 +76,7 @@ const LoanEligibilityCheckSchema = new mongoose.Schema({
         employerName: String,
         jobRole: { type: String, enum: JOB_ROLE },
         salaryMode: { type: String, enum: SALARY_MODE },
-        totalWorkExperienceMonths: Number,   
+        totalWorkExperienceMonths: Number,
 
         // Home Loan
         propertyValue: Number,
@@ -72,25 +92,25 @@ const LoanEligibilityCheckSchema = new mongoose.Schema({
         // Education Loan
         courseType: { type: String, enum: COURSE_TYPE },
         institutionName: String,
-        institutionType: { type: String, enum: INSTITUTION_TYPE },   
+        institutionType: { type: String, enum: INSTITUTION_TYPE },
         institutionLocation: { type: String, enum: CITY_TIER },
-        isAbroadCourse: { type: Boolean, default: false },          
-        courseDurationMonths: Number,                               
-        annualTuitionFee: Number,                                   
-        totalCourseFee: Number,                                     
-        moratoriumMonths: Number,                                   
-        expectedSalaryAfterCourse: Number,                         
+        isAbroadCourse: { type: Boolean, default: false },
+        courseDurationMonths: Number,
+        annualTuitionFee: Number,
+        totalCourseFee: Number,
+        moratoriumMonths: Number,
+        expectedSalaryAfterCourse: Number,
 
-        // Vehicle Loan 
+        // Vehicle Loan
         vehiclePrice: Number,
         vehicleType: { type: String, enum: VEHICLE_TYPE },
         downPayment: Number,
         dealerType: { type: String, enum: DEALER_TYPE },
-        vehicleAge: Number,                                        
+        vehicleAge: Number,
 
-        // Business Loan 
+        // Business Loan
         businessType: { type: String, enum: BUSINESS_TYPE },
-        businessVintageMonths: Number,                          
+        businessVintageMonths: Number,
         annualTurnover: Number,
         profitMarginPercent: Number,
         GSTFilingHistory: { type: String, enum: GST_FILING_HISTORY },
@@ -103,7 +123,7 @@ const LoanEligibilityCheckSchema = new mongoose.Schema({
 
     results: {
         eligible: Boolean,
-        eligibilityScore: Number,                    
+        eligibilityScore: Number,
         maxApprovedLoanAmount: Number,
         maxApprovedTenureMonths: Number,
         maxApprovedInterestRatePercent: Number,
@@ -114,8 +134,8 @@ const LoanEligibilityCheckSchema = new mongoose.Schema({
     },
 
     // Blockchain fields
-    blockchainTxHash:  { type: String, default: null },
-    ipfsMetadataHash:  { type: String, default: null },
+    blockchainTxHash: { type: String, default: null },
+    ipfsMetadataHash: { type: String, default: null },
 
     // ML Result
     mlResult: {
@@ -142,6 +162,12 @@ const LoanEligibilityCheckSchema = new mongoose.Schema({
             magnitude:  String
         }],
         baseValue: Number,
+    },
+
+    // ── Recommended Loan Products (top 3 at time of check) ────────────────────
+    recommendedProducts: {
+        type: [recommendedProductSchema],
+        default: [],
     },
 
 }, { timestamps: true })

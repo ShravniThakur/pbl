@@ -4,23 +4,24 @@ import { useNavigate, useParams } from "react-router-dom"
 import axios from "axios"
 import { toast } from "react-toastify"
 import BlockchainVerifier from "../components/BlockchainVerifier"
+import RecommendedProducts from "../components/RecommendedProducts"    // ← new
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const RISK_COLOR = {
     'Very Low': 'text-success',
-    'Low':      'text-success',
-    'Medium':   'text-yellow-400',
-    'High':     'text-danger',
-    'Very High':'text-danger',
+    'Low': 'text-success',
+    'Medium': 'text-yellow-400',
+    'High': 'text-danger',
+    'Very High': 'text-danger',
 }
 
 const RISK_BG = {
     'Very Low': 'bg-success/10 border-success/30',
-    'Low':      'bg-success/10 border-success/30',
-    'Medium':   'bg-yellow-400/10 border-yellow-400/30',
-    'High':     'bg-danger/10 border-danger/30',
-    'Very High':'bg-danger/10 border-danger/30',
+    'Low': 'bg-success/10 border-success/30',
+    'Medium': 'bg-yellow-400/10 border-yellow-400/30',
+    'High': 'bg-danger/10 border-danger/30',
+    'Very High': 'bg-danger/10 border-danger/30',
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -60,7 +61,7 @@ const LoanDetail = () => {
     const { id } = useParams()
     const navigate = useNavigate()
 
-    const [check,   setCheck]   = useState(null)
+    const [check, setCheck] = useState(null)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -93,10 +94,10 @@ const LoanDetail = () => {
         if (!check?.results) return []
         const { maxApprovedLoanAmount, maxApprovedTenureMonths, maxApprovedInterestRatePercent, emi } = check.results
         return [
-            { label: 'Max Amount',    value: fmt(maxApprovedLoanAmount) },
-            { label: 'Tenure',        value: `${maxApprovedTenureMonths} months` },
+            { label: 'Max Amount', value: fmt(maxApprovedLoanAmount) },
+            { label: 'Tenure', value: `${maxApprovedTenureMonths} months` },
             { label: 'Interest Rate', value: `${maxApprovedInterestRatePercent}% p.a.` },
-            { label: 'Est. EMI',      value: fmt(emi) },
+            { label: 'Est. EMI', value: fmt(emi) },
         ]
     }, [check])
 
@@ -154,9 +155,9 @@ const LoanDetail = () => {
                 )}
             </div>
 
-            {/* 🚀 BLOCKCHAIN VERIFICATION SECTION 🚀 */}
-            {check?._id && (
-                <div className="w-full">
+            {/* Blockchain Verifier */}
+            {check?.blockchainTxHash && (
+                <div className="bg-card border border-borderColour rounded-xl p-6">
                     <BlockchainVerifier loanId={check._id} />
                 </div>
             )}
@@ -229,8 +230,8 @@ const LoanDetail = () => {
                         return (
                             <div key={k}>
                                 <Row key="collateralType" label="Collateral Type" value={v.collateralType} />
-                                <Row key="assetValue"     label="Asset Value"     value={fmt(v.assetValue)} />
-                                <Row key="ownershipType"  label="Ownership Type"  value={v.ownershipType} />
+                                <Row key="assetValue" label="Asset Value" value={fmt(v.assetValue)} />
+                                <Row key="ownershipType" label="Ownership Type" value={v.ownershipType} />
                             </div>
                         )
                     }
@@ -246,10 +247,10 @@ const LoanDetail = () => {
                     <p className="text-lg font-black text-heading mb-5">ML Prediction</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {[
-                            { label: 'Score',       value: `${check.mlResult?.score || 0} / 100` },
+                            { label: 'Score', value: `${check.mlResult?.score || 0} / 100` },
                             { label: 'Probability', value: `${((check.mlResult?.probability || 0) * 100).toFixed(1)}%` },
-                            { label: 'Risk',        value: check.mlResult?.riskCategory || 'N/A' },
-                            { label: 'Confidence',  value: check.mlResult?.confidence || 'N/A' },
+                            { label: 'Risk', value: check.mlResult?.riskCategory || 'N/A' },
+                            { label: 'Confidence', value: check.mlResult?.confidence || 'N/A' },
                         ].map(({ label, value }) => (
                             <div key={label} className="bg-slate-50 border border-borderColour rounded-xl p-4">
                                 <p className="text-xs text-bodyText/50 uppercase tracking-wide mb-2">{label}</p>
@@ -298,6 +299,12 @@ const LoanDetail = () => {
                 </div>
             )}
 
+            {/* ── Recommended Loan Products ── */}
+            {/* Shown only for eligible checks; component self-hides if array is empty */}
+            {eligible && (
+                <RecommendedProducts products={check?.recommendedProducts} />
+            )}
+
             {/* Actions */}
             <div className="flex flex-wrap gap-3">
                 <button onClick={() => navigate('/loan-check')} className="bg-button hover:bg-buttonHover duration-300 text-white font-bold px-6 py-2.5 rounded-full text-sm">
@@ -307,6 +314,7 @@ const LoanDetail = () => {
                     View All History
                 </button>
             </div>
+
         </div>
     )
 }

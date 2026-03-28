@@ -3,11 +3,12 @@ import { NavLink } from "react-router-dom"
 import { AppContext } from "../context/AppContext"
 
 const NAV_ITEMS = [
-    { to: '/dashboard',         icon: '⬡',  label: 'Dashboard'   },
+    { to: '/dashboard',         icon: '⬡',  label: 'Dashboard'        },
     { to: '/financial-profile', icon: '◈',  label: 'Financial Profile' },
     { to: '/loan-check',        icon: '◎',  label: 'Loan Eligibility'  },
-    { to: '/loan-history',      icon: '▤',  label: 'History'     },
-    { to: '/settings',          icon: '⚙',  label: 'Settings'    },
+    { to: '/loan-products',     icon: '★',  label: 'Loan Products'     },
+    { to: '/loan-history',      icon: '▤',  label: 'History'           },
+    { to: '/settings',          icon: '⚙',  label: 'Settings'          },
 ]
 
 const Sidebar = () => {
