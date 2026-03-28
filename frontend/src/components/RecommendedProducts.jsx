@@ -1,24 +1,18 @@
-/**
- * RecommendedProducts.jsx
- * Matches the exact design language of LoanDetail.jsx:
- *   bg-card, border-borderColour, text-bodyText, text-heading,
- *   text-accentSoft, text-success, text-danger, bg-slate-50, rounded-xl
- */
+import { Award, CheckCircle2 } from "lucide-react"
 
 const fmtAmt = (n) => `₹${Number(n).toLocaleString('en-IN')}`
 
-// Fit score → colour tokens that already exist in the app
 function FitPill({ score }) {
     const cfg =
-        score >= 80 ? { text: 'text-success',     bg: 'bg-success/10   border-success/30',  label: 'Excellent Fit' } :
-        score >= 60 ? { text: 'text-accentSoft',  bg: 'bg-button/10    border-button/30',   label: 'Good Fit'      } :
-        score >= 40 ? { text: 'text-yellow-500',  bg: 'bg-yellow-50    border-yellow-200',  label: 'Fair Fit'      } :
-                      { text: 'text-bodyText/50', bg: 'bg-slate-100    border-borderColour', label: 'Low Fit'       }
+        score >= 80 ? { text: 'text-emerald',     bg: 'bg-emerald-light border-[#A7F3D0]',  label: 'Excellent Fit' } :
+        score >= 60 ? { text: 'text-primary',     bg: 'bg-primary/10    border-primary/20',     label: 'Good Fit'      } :
+        score >= 40 ? { text: 'text-amber-600',   bg: 'bg-amber-100     border-amber-200',      label: 'Fair Fit'      } :
+                      { text: 'text-text-muted',  bg: 'bg-[#F5F5F4]     border-border-default', label: 'Low Fit'       }
 
     return (
-        <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide
-                          px-2.5 py-1 rounded-full border ${cfg.bg} ${cfg.text}`}>
-            {cfg.label} · {score}/100
+        <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.05em]
+                          px-2.5 py-1 rounded-[6px] border ${cfg.bg} ${cfg.text}`}>
+            {cfg.label} <span className="opacity-60 font-semibold px-0.5">•</span> {score}/100
         </span>
     )
 }
@@ -33,82 +27,80 @@ function ProductCard({ product, rank }) {
     const isTop = rank === 0
 
     return (
-        <div className={`relative bg-card border rounded-xl overflow-hidden
-                         ${isTop ? 'border-accentSoft/40 ring-1 ring-accentSoft/20' : 'border-borderColour'}`}>
+        <div className={`relative bg-surface border rounded-[14px] overflow-hidden flex flex-col transition-shadow hover:shadow-card
+                         ${isTop ? 'border-primary/40 ring-1 ring-primary/20 shadow-sm' : 'border-border-default'}`}>
 
             {/* Best match ribbon */}
             {isTop && (
-                <div className="absolute top-0 right-0">
-                    <div className="bg-accentSoft text-white text-[10px] font-black uppercase
-                                    tracking-widest px-3 py-1 rounded-bl-xl">
-                        Best Match
+                <div className="absolute top-0 right-0 z-10">
+                    <div className="bg-primary text-white text-[10px] font-bold uppercase tracking-[0.1em]
+                                    px-3.5 py-1.5 rounded-bl-[14px] flex items-center gap-1.5 shadow-sm">
+                        <Award size={12} /> Best Match
                     </div>
                 </div>
             )}
 
-            <div className="p-5 flex flex-col gap-4">
-
+            <div className="p-5 sm:p-6 flex flex-col gap-5 flex-1 relative z-0">
                 {/* Lender header */}
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3.5 pr-16 sm:pr-24">
                     {logoUrl ? (
-                        <img
-                            src={logoUrl}
-                            alt={bankName}
-                            className="w-10 h-10 rounded-lg object-contain border border-borderColour
-                                       bg-white p-1 flex-shrink-0"
-                        />
+                        <div className="w-12 h-12 rounded-[10px] bg-white border border-border-default p-1.5 flex items-center justify-center shrink-0 shadow-sm">
+                            <img src={logoUrl} alt={bankName} className="w-full h-full object-contain" />
+                        </div>
                     ) : (
-                        <div className="w-10 h-10 rounded-lg bg-slate-100 border border-borderColour
-                                        flex items-center justify-center flex-shrink-0">
-                            <span className="text-accentSoft font-black text-base">
-                                {bankName.charAt(0)}
-                            </span>
+                        <div className="w-12 h-12 rounded-[10px] bg-[#F8F7F4] border border-border-default flex items-center justify-center shrink-0 shadow-sm">
+                            <span className="text-primary font-black text-lg">{bankName.charAt(0)}</span>
                         </div>
                     )}
-                    <div className="flex-1 min-w-0 pr-8">
-                        <p className="text-heading font-black text-sm leading-snug truncate">{productName}</p>
-                        <p className="text-bodyText/50 text-xs mt-0.5">{bankName}</p>
+                    <div className="flex flex-col justify-center min-w-0 pt-0.5">
+                        <p className="text-[16px] font-bold text-text-primary leading-snug truncate">{productName}</p>
+                        <p className="text-[13px] font-medium text-text-muted mt-0.5 truncate">{bankName}</p>
                     </div>
                 </div>
 
-                {/* Fit score */}
-                <FitPill score={fitScore} />
+                {/* Score & Config */}
+                <div>
+                    <FitPill score={fitScore} />
+                </div>
 
                 {/* Description */}
                 {description && (
-                    <p className="text-bodyText/60 text-xs leading-relaxed line-clamp-2">{description}</p>
+                    <p className="text-[13px] font-medium text-text-muted leading-relaxed line-clamp-2">{description}</p>
                 )}
 
-                {/* Key stats */}
-                <div className="grid grid-cols-3 gap-2">
+                {/* Stats Grid */}
+                <div className="grid grid-cols-3 gap-2 mt-auto">
                     {[
                         { label: 'Interest',   value: `${minInterestRate}–${maxInterestRate}%` },
-                        { label: 'Max Amount', value: fmtAmt(maxAmount) },
-                        { label: 'Max Tenure', value: `${maxTenureMonths} mo` },
+                        { label: 'Max Amt',    value: fmtAmt(maxAmount) },
+                        { label: 'Max Term',   value: `${maxTenureMonths} mo` },
                     ].map(({ label, value }) => (
-                        <div key={label} className="bg-slate-50 border border-borderColour rounded-xl px-3 py-2.5 text-center">
-                            <p className="text-bodyText/40 text-[10px] uppercase tracking-wide mb-1">{label}</p>
-                            <p className="text-accentSoft font-black text-xs leading-tight">{value}</p>
+                        <div key={label} className="bg-[#F8F7F4] border border-border-default rounded-[9px] px-2 py-2.5 text-center flex flex-col justify-center">
+                            <p className="text-[10px] font-semibold text-text-muted uppercase tracking-[0.05em] mb-1">{label}</p>
+                            <p className="text-[13px] font-bold text-primary leading-none">{value}</p>
                         </div>
                     ))}
                 </div>
 
-                {/* Range note */}
-                <p className="text-bodyText/40 text-[11px]">
-                    {fmtAmt(minAmount)} – {fmtAmt(maxAmount)} &nbsp;·&nbsp; {minTenureMonths}–{maxTenureMonths} months
-                </p>
-
-                {/* Feature bullets */}
+                {/* Features */}
                 {features?.length > 0 && (
-                    <ul className="flex flex-col gap-1.5">
-                        {features.slice(0, 3).map((f, i) => (
-                            <li key={i} className="flex items-start gap-2 text-xs text-bodyText/70">
-                                <span className="text-success font-bold flex-shrink-0 mt-0.5">✓</span>
-                                {f}
-                            </li>
-                        ))}
-                    </ul>
+                    <div className="pt-4 border-t border-border-default mt-1">
+                        <ul className="flex flex-col gap-2">
+                            {features.slice(0, 3).map((f, i) => (
+                                <li key={i} className="flex items-start gap-2.5 text-[13px] font-medium text-text-primary leading-snug">
+                                    <CheckCircle2 size={16} className="text-emerald shrink-0 mt-[1px]" />
+                                    <span>{f}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
                 )}
+            </div>
+            
+            <div className="bg-[#F8F7F4] border-t border-border-default px-5 sm:px-6 py-3">
+                <p className="text-[11px] font-semibold text-text-muted text-center cursor-default">
+                    Limits: {fmtAmt(minAmount)} TO {fmtAmt(maxAmount)} • {minTenureMonths}–{maxTenureMonths} MO
+                </p>
             </div>
         </div>
     )
@@ -118,30 +110,29 @@ export default function RecommendedProducts({ products }) {
     if (!products?.length) return null
 
     return (
-        <div className="bg-card border border-borderColour rounded-xl p-6">
-
-            {/* Section heading — mirrors other sections in LoanDetail */}
-            <div className="flex items-center gap-2 mb-1">
-                <span className="text-accentSoft text-lg">★</span>
-                <p className="text-lg font-black text-heading">Recommended Loan Products</p>
+        <div className="bg-surface border border-border-default rounded-[14px] p-6 sm:p-8 shadow-card">
+            {/* Header */}
+            <div className="flex items-center gap-2 mb-2">
+                <Award className="text-primary shrink-0" size={24} />
+                <h2 className="text-[20px] font-bold text-text-primary">Recommended Loan Products</h2>
             </div>
-            <p className="text-xs text-bodyText/50 mb-5">
-                Matched to your approved amount, credit score &amp; income · Sorted by best fit
+            <p className="text-[13px] font-medium text-text-muted mb-6">
+                Products customized for your profile based on amount, score, and eligibility.
             </p>
 
-            {/* Cards grid */}
-            <div className={`grid gap-4 ${
-                products.length === 1 ? 'grid-cols-1 max-w-xs' :
+            {/* Grid */}
+            <div className={`grid gap-5 ${
+                products.length === 1 ? 'grid-cols-1 max-w-sm' :
                 products.length === 2 ? 'grid-cols-1 sm:grid-cols-2' :
-                                        'grid-cols-1 sm:grid-cols-3'
+                                        'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
             }`}>
                 {products.map((p, i) => (
                     <ProductCard key={p.productId || i} product={p} rank={i} />
                 ))}
             </div>
 
-            <p className="text-bodyText/30 text-[11px] mt-4">
-                Indicative products matched at time of check. Final terms subject to lender approval.
+            <p className="text-[11px] font-medium text-text-muted mt-5 text-center px-4">
+                Indicative products matched at the time of your check. Final terms are subject to formal lender approval.
             </p>
         </div>
     )

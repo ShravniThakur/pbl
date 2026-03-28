@@ -3,15 +3,16 @@ import { AppContext } from "../context/AppContext"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
 import { toast } from "react-toastify"
+import { FileText, Filter, ChevronRight, XCircle } from "lucide-react"
 
 const LOAN_TYPES = ['Personal Loan', 'Home Loan', 'Education Loan', 'Vehicle Loan', 'Business Loan']
 
-const RISK_COLOR = {
-    'Very Low': 'text-success',
-    'Low': 'text-success',
-    'Medium': 'text-yellow-400',
-    'High': 'text-danger',
-    'Very High': 'text-danger',
+const RISK_BADGE = {
+    'Very Low':  'bg-emerald-light text-emerald border-emerald-light',
+    'Low':       'bg-emerald-light text-emerald border-emerald-light',
+    'Medium':    'bg-amber-100 text-amber-600 border-amber-200',
+    'High':      'bg-rose-light text-rose border-[#FECDD3]',
+    'Very High': 'bg-rose-light text-rose border-[#FECDD3]',
 }
 
 const fmt = (n) => n !== null && n !== undefined ? `₹${Number(n).toLocaleString('en-IN')}` : '—'
@@ -65,17 +66,17 @@ const LoanHistory = () => {
     }), [checks, filterType, filterResult])
 
     if (loading) return (
-        <div className="flex items-center justify-center min-h-screen text-accentSoft text-xl font-bold">
-            Loading...
+        <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="w-10 h-10 border-4 border-border-default border-t-primary rounded-full animate-spin"></div>
         </div>
     )
 
     if (error) return (
-        <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-            <p className="text-danger font-semibold">{error}</p>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 animate-fade-up">
+            <p className="text-rose font-medium text-lg">{error}</p>
             <button
                 onClick={() => window.location.reload()}
-                className="bg-button hover:bg-buttonHover duration-300 text-white font-bold px-5 py-2 rounded-full text-sm"
+                className="bg-primary hover:bg-primary-hover duration-200 text-white font-bold px-6 py-2.5 rounded-[9px] text-sm shadow-button-primary"
             >
                 Retry
             </button>
@@ -83,137 +84,161 @@ const LoanHistory = () => {
     )
 
     return (
-        <div className="flex flex-col gap-8 text-bodyText font-sans m-5">
+        <div className="max-w-7xl w-full mx-auto px-8 md:px-12 py-12 md:py-16 flex flex-col gap-10 font-inter animate-fade-up">
 
             {/* Header */}
             <div>
-                <p className="text-3xl font-black text-heading">Loan History ▤</p>
-                <p className="text-sm text-bodyText/60 mt-1">All your past loan eligibility checks.</p>
+                <h1 className="text-[40px] font-black text-sidebar-bg tracking-[-0.03em] leading-tight py-4">Application History</h1>
+                <p className="text-sm font-medium text-text-muted mt-1">Review your automated eligibility checks and loan results.</p>
             </div>
 
-            {/* Filters */}
-            <div className="flex flex-wrap gap-4">
-                <div className="flex flex-col gap-1">
-                    <p className="text-xs font-semibold text-accentSoft uppercase tracking-wide">Loan Type</p>
-                    <select
-                        className="bg-card border border-borderColour rounded-lg px-3 py-2 text-bodyText text-sm focus:outline-none focus:border-button transition-colors duration-200"
-                        value={filterType}
-                        onChange={e => setFilterType(e.target.value)}
-                    >
-                        <option value="">All Types</option>
-                        {LOAN_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                </div>
-                <div className="flex flex-col gap-1">
-                    <p className="text-xs font-semibold text-accentSoft uppercase tracking-wide">Result</p>
-                    <select
-                        className="bg-card border border-borderColour rounded-lg px-3 py-2 text-bodyText text-sm focus:outline-none focus:border-button transition-colors duration-200"
-                        value={filterResult}
-                        onChange={e => setFilterResult(e.target.value)}
-                    >
-                        <option value="">All Results</option>
-                        <option value="Eligible">Eligible</option>
-                        <option value="Rejected">Rejected</option>
-                    </select>
-                </div>
-                {(filterType || filterResult) && (
-                    <div className="flex items-end">
-                        <button
-                            onClick={() => { setFilterType(''); setFilterResult('') }}
-                            className="border border-borderColour hover:bg-card duration-300 text-bodyText text-sm font-semibold px-4 py-2 rounded-lg"
-                        >
-                            Clear Filters
-                        </button>
-                    </div>
-                )}
-            </div>
-
-            {/* Summary row */}
+            {/* Overview Cards */}
             <div className="grid grid-cols-3 gap-4">
                 {[
-                    { label: 'Total', value: checks.length, color: 'text-accentSoft' },
-                    { label: 'Eligible', value: eligibleCount, color: 'text-success' },
-                    { label: 'Rejected', value: rejectedCount, color: 'text-danger' },
+                    { label: 'Total Logs', value: checks.length,   color: 'text-primary' },
+                    { label: 'Approved',   value: eligibleCount, color: 'text-emerald' },
+                    { label: 'Rejected',   value: rejectedCount, color: 'text-rose' },
                 ].map(({ label, value, color }) => (
-                    <div key={label} className="bg-card border border-borderColour rounded-xl p-4 text-center hover:bg-cardHover duration-300">
-                        <p className={`text-2xl font-black ${color}`}>{value}</p>
-                        <p className="text-xs text-bodyText/60 mt-1">{label}</p>
+                    <div key={label} className="bg-surface border border-border-default rounded-[14px] p-5 shadow-sm">
+                        <p className={`text-[28px] font-black leading-none mb-1 ${color}`}>{value}</p>
+                        <p className="text-[12px] font-semibold text-text-muted uppercase tracking-[0.05em]">{label}</p>
                     </div>
                 ))}
             </div>
 
-            {/* Table */}
-            {filtered.length === 0 ? (
-                <div className="bg-card border border-borderColour rounded-xl p-12 text-center">
-                    <p className="text-bodyText/50 mb-4">
-                        {checks.length === 0 ? 'No eligibility checks yet.' : 'No checks match your filters.'}
-                    </p>
-                    {checks.length === 0 && (
-                        <button
-                            onClick={() => navigate('/loan-check')}
-                            className="bg-button hover:bg-buttonHover duration-300 text-white font-bold px-5 py-2 rounded-full text-sm"
-                        >
-                            Run Your First Check →
-                        </button>
-                    )}
-                </div>
-            ) : (
-                <div className="border border-borderColour rounded-xl overflow-hidden">
-                    {/* Desktop header */}
-                    <div className="hidden md:grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr_0.5fr] gap-3 font-bold p-3 bg-card border-b border-borderColour text-sm text-accentSoft">
-                        <p>Loan Type</p>
-                        <p>Requested</p>
-                        <p>Result</p>
-                        <p>Risk</p>
-                        <p>Date</p>
-                        <p></p>
+            {/* Table Area Container */}
+            <div className="bg-surface border border-border-default rounded-[14px] flex flex-col shadow-card">
+                
+                {/* Filters Banner */}
+                <div className="p-4 border-b border-border-default bg-[#F8F7F4]/50 rounded-t-[14px] flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                    <div className="flex items-center gap-2 text-text-muted font-semibold text-[13px]">
+                        <Filter size={16} /> Filters
                     </div>
-
-                    {filtered.map((c) => (
-                        <div
-                            key={c._id}
-                            onClick={() => navigate(`/loan-history/${c._id}`)}
-                            className="cursor-pointer border-b border-borderColour hover:bg-card duration-200 transition-colors last:border-b-0"
+                    <div className="flex flex-wrap gap-3 w-full sm:w-auto">
+                        <select
+                            className="bg-white border border-border-default rounded-[8px] px-3 py-1.5 text-text-primary text-[13px] font-medium focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 appearance-none min-w-[140px]"
+                            value={filterType}
+                            onChange={e => setFilterType(e.target.value)}
                         >
-                            {/* Desktop row */}
-                            <div className="hidden md:grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr_0.5fr] gap-3 p-3 text-sm items-center">
-                                <p className="font-semibold text-heading">{c.loanType}</p>
-                                <p>{fmt(c.requestedLoanAmount)}</p>
-                                <p className={`font-bold ${c.results?.eligible ? 'text-success' : 'text-danger'}`}>
-                                    {c.results?.eligible ? '✓ Eligible' : '✗ Rejected'}
-                                </p>
-                                <p className={RISK_COLOR[c.results?.riskCategory] || 'text-bodyText'}>
-                                    {c.results?.riskCategory || '—'}
-                                </p>
-                                <p className="text-bodyText/60">{formatDate(c.createdAt)}</p>
-                                <p className="text-accentSoft text-xs font-semibold">View →</p>
-                            </div>
-
-                            {/* Mobile row */}
-                            <div className="md:hidden px-4 py-3 flex items-center justify-between gap-3">
-                                <div>
-                                    <p className="font-bold text-heading">{c.loanType}</p>
-                                    <p className="text-xs text-bodyText/60 mt-0.5">
-                                        {fmt(c.requestedLoanAmount)} · {formatDate(c.createdAt)}
-                                    </p>
-                                    {c.results?.riskCategory && (
-                                        <p className={`text-xs mt-0.5 ${RISK_COLOR[c.results.riskCategory]}`}>
-                                            {c.results.riskCategory} Risk
-                                        </p>
-                                    )}
-                                </div>
-                                <div className="flex flex-col items-end gap-1">
-                                    <p className={`font-bold text-sm ${c.results?.eligible ? 'text-success' : 'text-danger'}`}>
-                                        {c.results?.eligible ? '✓ Eligible' : '✗ Rejected'}
-                                    </p>
-                                    <p className="text-xs text-accentSoft">View →</p>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                            <option value="">All Types</option>
+                            {LOAN_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        <select
+                            className="bg-white border border-border-default rounded-[8px] px-3 py-1.5 text-text-primary text-[13px] font-medium focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 appearance-none min-w-[140px]"
+                            value={filterResult}
+                            onChange={e => setFilterResult(e.target.value)}
+                        >
+                            <option value="">All Results</option>
+                            <option value="Eligible">Eligible</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                        {(filterType || filterResult) && (
+                            <button
+                                onClick={() => { setFilterType(''); setFilterResult('') }}
+                                className="flex items-center justify-center bg-rose/10 text-rose border border-rose/20 rounded-[8px] px-3 py-1.5 text-[13px] font-bold hover:bg-rose/20 transition-colors shrink-0"
+                            >
+                                <XCircle size={14} className="mr-1.5" /> Clear
+                            </button>
+                        )}
+                    </div>
                 </div>
-            )}
 
+                {/* Table Data */}
+                {filtered.length === 0 ? (
+                    <div className="p-16 text-center flex flex-col items-center">
+                        <FileText size={48} className="text-text-muted/30 mb-4" />
+                        <p className="text-text-primary font-bold text-lg mb-1">
+                            {checks.length === 0 ? 'No applications yet' : 'No matches found'}
+                        </p>
+                        <p className="text-text-muted text-[13px] font-medium mb-6">
+                            {checks.length === 0 ? 'Run your first loan check to see it here.' : 'Try clearing your filters to see more results.'}
+                        </p>
+                        {checks.length === 0 && (
+                            <button
+                                onClick={() => navigate('/loan-check')}
+                                className="bg-primary hover:bg-primary-hover transition-colors text-white font-bold px-6 py-2.5 rounded-[9px] text-sm shadow-button-primary"
+                            >
+                                Start New Application
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    <div className="flex flex-col">
+                        {/* Desktop header */}
+                        <div className="hidden md:grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr_auto] gap-4 px-6 py-3 border-b border-border-default bg-[#F8F7F4] text-[11px] font-bold text-text-muted uppercase tracking-[0.05em]">
+                            <p>Loan Type</p>
+                            <p>Amount</p>
+                            <p>Status</p>
+                            <p>Risk Eval</p>
+                            <p>Date</p>
+                            <p className="w-8"></p>
+                        </div>
+
+                        {/* Rows */}
+                        <div className="flex flex-col divide-y divide-border-default">
+                            {filtered.map((c) => {
+                                const isEligible = c.results?.eligible
+                                const riskBadgeClass = RISK_BADGE[c.results?.riskCategory] || 'bg-[#F5F5F4] text-text-muted border-border-default'
+                                
+                                return (
+                                    <div
+                                        key={c._id}
+                                        onClick={() => navigate(`/loan-history/${c._id}`)}
+                                        className="group cursor-pointer hover:bg-[#F8F7F4]/80 transition-colors"
+                                    >
+                                        {/* Desktop row */}
+                                        <div className="hidden md:grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr_auto] gap-4 px-6 py-4 text-[13px] items-center">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-[#F5F5F4] border border-border-default flex items-center justify-center shrink-0">
+                                                    <FileText size={14} className="text-primary" />
+                                                </div>
+                                                <p className="font-bold text-text-primary truncate">{c.loanType}</p>
+                                            </div>
+                                            <p className="font-semibold text-text-primary">{fmt(c.requestedLoanAmount)}</p>
+                                            
+                                            <div>
+                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[11px] font-bold uppercase tracking-wide
+                                                    ${isEligible ? 'bg-emerald-light text-emerald border-[#A7F3D0]' : 'bg-rose-light text-rose border-[#FECDD3]'}`}>
+                                                    {isEligible ? 'Approved' : 'Rejected'}
+                                                </span>
+                                            </div>
+                                            
+                                            <div>
+                                                <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-bold border uppercase tracking-wider ${riskBadgeClass}`}>
+                                                    {c.results?.riskCategory || '—'}
+                                                </span>
+                                            </div>
+                                            
+                                            <p className="text-text-muted font-medium">{formatDate(c.createdAt)}</p>
+                                            
+                                            <div className="w-8 flex justify-end text-text-muted group-hover:text-primary transition-colors">
+                                                <ChevronRight size={18} />
+                                            </div>
+                                        </div>
+
+                                        {/* Mobile row */}
+                                        <div className="md:hidden px-5 py-4 flex items-center justify-between gap-3">
+                                            <div className="flex flex-col pt-0.5">
+                                                <p className="font-bold text-text-primary text-[14px] leading-tight">{c.loanType}</p>
+                                                <p className="text-[12px] text-text-muted font-medium mt-1">
+                                                    {fmt(c.requestedLoanAmount)} <span className="mx-1">•</span> {formatDate(c.createdAt)}
+                                                </p>
+                                            </div>
+                                            <div className="flex flex-col items-end gap-2">
+                                                <span className={`inline-block px-2 py-0.5 rounded border text-[10px] font-bold uppercase tracking-wider
+                                                    ${isEligible ? 'bg-emerald-light text-emerald border-[#A7F3D0]' : 'bg-rose-light text-rose border-[#FECDD3]'}`}>
+                                                    {isEligible ? 'Approved' : 'Rejected'}
+                                                </span>
+                                                <ChevronRight size={16} className="text-text-muted" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     )
 }

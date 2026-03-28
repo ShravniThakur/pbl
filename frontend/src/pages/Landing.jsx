@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router"
-import logo from "../assets/Logo.png"
+import logo from "../assets/Logo2.png"
 
 const Landing = () => {
     const navigate = useNavigate()
@@ -18,17 +18,17 @@ const Landing = () => {
                             Know your loan <span className="text-accent">eligibility</span> before you apply.
                         </p>
                         <p className="text-xl font-semibold mb-4">
-                            Get a <span className="text-accentSoft">personalized offer</span> based on your financial profile —
+                            Get a <span className="text-accent">personalized offer</span> based on your financial profile —
                             approved amount, interest rate, tenure, and EMI. Instantly.
                         </p>
-                        <p className="text-base text-accentSoft font-semibold mb-10">
+                        <p className="text-base text-accent font-semibold mb-10">
                             Supporting Personal, Home, Education, Vehicle & Business loans.
                         </p>
                         <div className="flex flex-wrap gap-4">
                             <button onClick={() => navigate('/signup')} className="bg-button px-8 py-3 rounded-full hover:bg-buttonHover duration-300 font-bold text-lg text-white">
                                 GET STARTED →
                             </button>
-                            <button onClick={() => navigate('/login')} className="border border-borderColour px-8 py-3 rounded-full hover:bg-card duration-300 font-bold text-lg text-accentSoft">
+                            <button onClick={() => navigate('/login')} className="border border-borderColour px-8 py-3 rounded-full hover:bg-card duration-300 font-bold text-lg text-accent">
                                 SIGN IN
                             </button>
                         </div>
@@ -44,7 +44,7 @@ const Landing = () => {
                             <div key={label} className="bg-card border border-borderColour rounded-xl p-6 hover:bg-cardHover duration-300 text-center">
                                 <p className="text-3xl mb-2">{icon}</p>
                                 <p className="text-2xl font-black text-heading">{value}</p>
-                                <p className="text-sm text-accentSoft font-semibold">{label}</p>
+                                <p className="text-sm text-accent font-semibold">{label}</p>
                             </div>
                         ))}
                     </div>
@@ -66,7 +66,7 @@ const Landing = () => {
                             <div key={title} className="flex flex-col gap-4 bg-card rounded-xl p-7 hover:bg-cardHover border border-borderColour duration-300">
                                 <div className="flex gap-3 items-center">
                                     <span className="text-3xl">{icon}</span>
-                                    <p className="font-bold text-xl text-accentSoft">{title}</p>
+                                    <p className="font-bold text-xl text-accent">{title}</p>
                                 </div>
                                 <p>{desc}</p>
                             </div>
@@ -90,7 +90,7 @@ const Landing = () => {
                                     <span className="text-xs font-black text-button bg-button/10 px-2 py-1 rounded-lg">{step}</span>
                                     <span className="text-2xl">{icon}</span>
                                 </div>
-                                <p className="font-bold text-lg text-accentSoft">{title}</p>
+                                <p className="font-bold text-lg text-accent">{title}</p>
                                 <p className="text-sm">{desc}</p>
                             </div>
                         ))}
@@ -113,7 +113,7 @@ const Landing = () => {
                             <div key={rule} className="flex gap-4 items-start bg-slate-50 rounded-lg p-5 border border-borderColour">
                                 <span className="text-2xl mt-1">{icon}</span>
                                 <div>
-                                    <p className="font-bold text-accentSoft mb-1">{rule}</p>
+                                    <p className="font-bold text-accent mb-1">{rule}</p>
                                     <p className="text-sm">{desc}</p>
                                 </div>
                             </div>
@@ -137,7 +137,7 @@ const Landing = () => {
                             <div key={q} className="flex flex-col gap-4 bg-card rounded-xl p-7 hover:bg-cardHover border border-borderColour duration-300">
                                 <div className="flex gap-3 items-start">
                                     <span className="text-xl mt-0.5">❓</span>
-                                    <p className="font-bold text-lg text-accentSoft">{q}</p>
+                                    <p className="font-bold text-lg text-accent">{q}</p>
                                 </div>
                                 <p className="text-sm">{a}</p>
                             </div>
@@ -148,7 +148,7 @@ const Landing = () => {
                 {/* CTA */}
                 <div className="bg-card border border-borderColour rounded-xl p-10 flex flex-col md:flex-row gap-10 items-center justify-between">
                     <p className="md:w-[65%] text-xl font-semibold">
-                        Get started with <span className="text-accentSoft font-black">Loan</span> and know your
+                        Get started with <span className="text-accent font-black">Loan</span> and know your
                         eligibility before you walk into any bank. Whether it's a home, a car, your education,
                         or your business — make every application count.
                     </p>
@@ -168,10 +168,10 @@ const Landing = () => {
                         ].map(({ name, text }) => (
                             <div key={name} className="flex flex-col gap-4 bg-card rounded-xl p-7 hover:bg-cardHover border border-borderColour duration-300">
                                 <div className="flex gap-3 items-center">
-                                    <div className="w-9 h-9 rounded-full bg-button/20 border border-button flex items-center justify-center text-accentSoft font-bold">
+                                    <div className="w-9 h-9 rounded-full bg-button/20 border border-button flex items-center justify-center text-accent font-bold">
                                         {name.charAt(0)}
                                     </div>
-                                    <p className="font-bold text-accentSoft">{name}</p>
+                                    <p className="font-bold text-accent">{name}</p>
                                 </div>
                                 <p className="text-sm italic">{text}</p>
                             </div>
@@ -180,15 +180,15 @@ const Landing = () => {
                 </div>
 
                 {/* Footer */}
-                <div className="border-t border-borderColour pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-bodyText/50">
+                <div className="border-t border-borderColour pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-bodyText/80">
                     <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-lg bg-button flex items-center justify-center text-white font-black text-sm">L</div>
                         <span className="font-black text-heading">LOAN</span>
                     </div>
                     <p>© 2025 Loan. All rights reserved.</p>
                     <div className="flex gap-6">
-                        <button onClick={() => navigate('/login')} className="hover:text-accentSoft duration-200">Sign In</button>
-                        <button onClick={() => navigate('/signup')} className="hover:text-accentSoft duration-200">Get Started</button>
+                        <button onClick={() => navigate('/login')} className="hover:text-accent duration-200">Sign In</button>
+                        <button onClick={() => navigate('/signup')} className="hover:text-accent duration-200">Get Started</button>
                     </div>
                 </div>
 

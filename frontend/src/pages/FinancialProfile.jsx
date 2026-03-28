@@ -1,7 +1,8 @@
-import { useCallback, useContext, useEffect, useRef, useState } from "react"
+import { useCallback, useContext, useEffect, useState } from "react"
 import { AppContext } from "../context/AppContext"
 import axios from "axios"
 import { toast } from "react-toastify"
+import { X, CheckCircle, AlertCircle } from "lucide-react"
 import {
     GENDER, MARITAL_STATUS, CITY_TIER, RESIDENTIAL_STATUS, RESIDENT_TYPE,
     EMPLOYMENT_TYPE, EMPLOYER_TYPE, PAYMENT_HISTORY_FLAG, STATUS, NON_EARNERS
@@ -16,93 +17,97 @@ const EMPTY = {
     creditScore: '', recentLoanInquiries: [], paymentHistoryFlag: 'Clean'
 }
 
-const INPUT_CLASS = `bg-white border border-borderColour rounded-lg px-3 py-2 text-bodyText text-sm
-    focus:outline-none focus:border-button transition-colors duration-200
-    disabled:opacity-50 disabled:cursor-not-allowed w-full`
+const fmt = (n) => n ? `₹${Number(n).toLocaleString('en-IN')}` : '—'
+
+const INPUT_CLASS = `bg-surface border border-border-default rounded-[9px] px-4 py-3 text-text-primary text-[15px]
+    focus:outline-none focus:border-primary focus:shadow-[0_0_0_3px_rgba(79,70,229,0.15)] transition-shadow duration-200
+    disabled:opacity-50 disabled:cursor-not-allowed w-full font-medium placeholder:text-text-muted`
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Convert a saved profile object into controlled-input-friendly form state */
 const profileToForm = (p) => ({
     ...p,
-    age:                    String(p.age                    ?? ''),
-    monthlyNetIncome:       String(p.monthlyNetIncome       ?? ''),
+    age: String(p.age ?? ''),
+    monthlyNetIncome: String(p.monthlyNetIncome ?? ''),
     employmentTenureMonths: String(p.employmentTenureMonths ?? ''),
-    creditScore:            String(p.creditScore            ?? ''),
+    creditScore: String(p.creditScore ?? ''),
 })
 
-/** Attach a stable `_id` to list items when they are added */
 const withId = (obj) => ({ ...obj, _id: crypto.randomUUID() })
 
-// ─── Sub-components (outside component to keep identity stable) ───────────────
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 const LoadingScreen = () => (
-    <div
-        role="status"
-        aria-busy="true"
-        aria-label="Loading financial profile"
-        className="flex items-center justify-center min-h-screen text-accentSoft text-xl font-bold"
-    >
-        <span className="animate-pulse">Loading...</span>
+    <div className="flex items-center justify-center min-h-screen">
+        <div className="w-10 h-10 border-4 border-border-default border-t-primary rounded-full animate-spin"></div>
     </div>
 )
 
-const SectionHeader = ({ title, sub }) => (
-    <div className="border-b border-borderColour pb-3 mb-4">
-        <p className="text-lg font-black text-heading">{title}</p>
-        {sub && <p className="text-xs text-bodyText/50 mt-0.5">{sub}</p>}
+const SectionCard = ({ title, sub, accentColor, children }) => (
+    <div className="bg-surface relative border border-border-default rounded-[14px] p-6 shadow-card overflow-hidden">
+        <div className={`absolute top-0 bottom-0 left-0 w-1 ${accentColor}`} />
+        <div className="mb-8">
+            <h2 className="text-[20px] font-bold text-text-primary">{title}</h2>
+            {sub && <p className="text-[15px] font-medium text-text-muted mt-1.5">{sub}</p>}
+        </div>
+        <div>{children}</div>
     </div>
+)
+
+const DisplayGrid = ({ children }) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-8 gap-x-10">{children}</div>
 )
 
 const Field = ({ label, children }) => (
-    <div className="flex flex-col gap-1">
-        <p className="text-xs font-semibold text-accentSoft uppercase tracking-wide">{label}</p>
+    <div className="flex flex-col gap-2">
+        <p className="text-[12px] font-bold text-text-muted uppercase tracking-[0.05em]">{label}</p>
         {children}
     </div>
 )
 
-const Input = ({ label, isReadonly, ...props }) => (
+const DisplayField = ({ label, value }) => (
     <Field label={label}>
-        <input
-            className={INPUT_CLASS}
-            disabled={props.disabled ?? isReadonly}
-            {...props}
-        />
+        <div className="bg-slate-50 border border-border-default rounded-md px-3 py-2">
+            <p className="text-[17px] font-bold text-text-primary tabular-nums break-words">{value || '—'}</p>
+        </div>
     </Field>
 )
 
-const Select = ({ label, options, placeholder, isReadonly, ...props }) => (
-    <Field label={label}>
-        <select
-            className={INPUT_CLASS}
-            disabled={props.disabled ?? isReadonly}
-            {...props}
-        >
-            {placeholder && <option value="">{placeholder}</option>}
-            {options.map(o => <option key={o} value={o}>{o}</option>)}
-        </select>
-    </Field>
-)
+const Input = ({ label, isReadonly, ...props }) => {
+    if (isReadonly) return <DisplayField label={label} value={props.value} />
+    return (
+        <Field label={label}>
+            <input className={INPUT_CLASS} disabled={props.disabled} {...props} />
+        </Field>
+    )
+}
 
-// ─── Inline delete confirmation ───────────────────────────────────────────────
+const Select = ({ label, options, placeholder, isReadonly, ...props }) => {
+    if (isReadonly) return <DisplayField label={label} value={props.value} />
+    return (
+        <Field label={label}>
+            <select className={INPUT_CLASS} disabled={props.disabled} {...props}>
+                {placeholder && <option value="" disabled className="text-text-muted">{placeholder}</option>}
+                {options.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+        </Field>
+    )
+}
 
-const DeleteConfirm = ({ onConfirm, onCancel }) => (
-    <div className="flex items-center gap-3 bg-danger/10 border border-danger/30 rounded-xl px-4 py-3 text-sm">
-        <p className="text-danger font-semibold flex-1">Delete your financial profile? This cannot be undone.</p>
-        <button
-            type="button"
-            onClick={onConfirm}
-            className="bg-danger hover:bg-danger/80 duration-200 text-white font-bold px-4 py-1.5 rounded-lg text-xs"
-        >
-            Yes, delete
-        </button>
-        <button
-            type="button"
-            onClick={onCancel}
-            className="border border-borderColour hover:bg-card duration-200 font-bold px-4 py-1.5 rounded-lg text-xs text-bodyText"
-        >
-            Cancel
-        </button>
+const ListItem = ({ children, onRemove, isReadonly }) => (
+    <div className="group flex items-center justify-between bg-surface border border-border-default rounded-[10px] px-5 py-3.5 text-[15px] font-medium text-text-primary transition-colors hover:border-border-hover overflow-hidden">
+        <div className="flex gap-2 tabular-nums">
+            {children}
+        </div>
+        {!isReadonly && (
+            <button
+                type="button"
+                onClick={onRemove}
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-text-muted hover:text-rose hover:bg-rose-light rounded-md"
+            >
+                <X size={16} />
+            </button>
+        )}
     </div>
 )
 
@@ -111,25 +116,23 @@ const DeleteConfirm = ({ onConfirm, onCancel }) => (
 const FinancialProfile = () => {
     const { token, backend_url } = useContext(AppContext)
 
-    const [profile,    setProfile]    = useState(null)
-    const [loading,    setLoading]    = useState(true)
-    const [editing,    setEditing]    = useState(false)
+    const [profile, setProfile] = useState(null)
+    const [loading, setLoading] = useState(true)
+    const [editing, setEditing] = useState(false)
     const [submitting, setSubmitting] = useState(false)
     const [confirmDel, setConfirmDel] = useState(false)
-    const [form,       setForm]       = useState(EMPTY)
+    const [form, setForm] = useState(EMPTY)
 
-    const [newEmi,     setNewEmi]     = useState({ monthlyAmount: '', remainingTenureMonths: '' })
-    const [newCC,      setNewCC]      = useState({ outstandingBalance: '', minimumDue: '' })
-    const [newLoan,    setNewLoan]    = useState({ principalOutstanding: '', monthlyEMI: '', remainingTenureMonths: '', interestRate: '' })
+    const [newEmi, setNewEmi] = useState({ monthlyAmount: '', remainingTenureMonths: '' })
+    const [newCC, setNewCC] = useState({ outstandingBalance: '', minimumDue: '' })
+    const [newLoan, setNewLoan] = useState({ principalOutstanding: '', monthlyEMI: '', remainingTenureMonths: '', interestRate: '' })
     const [newInquiry, setNewInquiry] = useState({ monthsAgo: '', status: '' })
 
-    // ── Add-item validation errors ──────────────────────────────────────────
-    const [emiError,     setEmiError]     = useState('')
-    const [ccError,      setCcError]      = useState('')
-    const [loanError,    setLoanError]    = useState('')
+    const [emiError, setEmiError] = useState('')
+    const [ccError, setCcError] = useState('')
+    const [loanError, setLoanError] = useState('')
     const [inquiryError, setInquiryError] = useState('')
 
-    // ── Fetch ───────────────────────────────────────────────────────────────
     const fetchProfile = useCallback(async (signal) => {
         try {
             const res = await axios.get(`${backend_url}/financial-profile`, {
@@ -154,28 +157,31 @@ const FinancialProfile = () => {
         return () => controller.abort()
     }, [fetchProfile])
 
-    // ── Helpers ─────────────────────────────────────────────────────────────
     const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
     const isNonEarner = NON_EARNERS.includes(form.employmentType)
-    const isReadonly  = profile && !editing
+    const isReadonly = Boolean(profile && !editing)
 
     const handleCancel = () => {
         setEditing(false)
-        setForm(profileToForm(profile)) // single source of truth for reset
+        setForm(profileToForm(profile))
+        setConfirmDel(false)
+        setNewEmi({ monthlyAmount: '', remainingTenureMonths: '' })
+        setNewCC({ outstandingBalance: '', minimumDue: '' })
+        setNewLoan({ principalOutstanding: '', monthlyEMI: '', remainingTenureMonths: '', interestRate: '' })
+        setNewInquiry({ monthsAgo: '', status: '' })
     }
 
-    // ── Submit ───────────────────────────────────────────────────────────────
     const handleSubmit = async (e) => {
         e.preventDefault()
         setSubmitting(true)
         try {
             const payload = {
                 ...form,
-                age:                    Number(form.age),
-                monthlyNetIncome:       Number(form.monthlyNetIncome),
+                age: Number(form.age),
+                monthlyNetIncome: Number(form.monthlyNetIncome),
                 employmentTenureMonths: Number(form.employmentTenureMonths),
-                creditScore:            Number(form.creditScore),
-                gender:                 form.gender || undefined,
+                creditScore: Number(form.creditScore),
+                gender: form.gender || undefined,
             }
 
             const headers = { Authorization: token }
@@ -185,8 +191,7 @@ const FinancialProfile = () => {
                 if (res.data.success) {
                     toast.success('Financial profile updated successfully!')
                     setEditing(false)
-                    const controller = new AbortController()
-                    await fetchProfile(controller.signal)
+                    await fetchProfile()
                 } else {
                     toast.error(res.data.message)
                 }
@@ -194,8 +199,7 @@ const FinancialProfile = () => {
                 const res = await axios.post(`${backend_url}/financial-profile`, payload, { headers })
                 if (res.data.success) {
                     toast.success('Financial profile created successfully!')
-                    const controller = new AbortController()
-                    await fetchProfile(controller.signal)
+                    await fetchProfile()
                 } else {
                     toast.error(res.data.message)
                 }
@@ -207,7 +211,6 @@ const FinancialProfile = () => {
         }
     }
 
-    // ── Delete ───────────────────────────────────────────────────────────────
     const handleDelete = async () => {
         try {
             const res = await axios.delete(`${backend_url}/financial-profile`, {
@@ -227,329 +230,252 @@ const FinancialProfile = () => {
         }
     }
 
-    // ── Add-item handlers ────────────────────────────────────────────────────
     const handleAddEmi = () => {
-        if (newEmi.monthlyAmount === '' || newEmi.remainingTenureMonths === '') {
-            setEmiError('Both fields are required.')
-            return
-        }
+        if (!newEmi.monthlyAmount || !newEmi.remainingTenureMonths) return setEmiError('Both fields required.')
         setEmiError('')
-        set('existingEmis', [...form.existingEmis, withId({
-            monthlyAmount:         Number(newEmi.monthlyAmount),
-            remainingTenureMonths: Number(newEmi.remainingTenureMonths),
-        })])
+        set('existingEmis', [...form.existingEmis, withId({ monthlyAmount: Number(newEmi.monthlyAmount), remainingTenureMonths: Number(newEmi.remainingTenureMonths) })])
         setNewEmi({ monthlyAmount: '', remainingTenureMonths: '' })
     }
 
     const handleAddCC = () => {
-        if (newCC.outstandingBalance === '' || newCC.minimumDue === '') {
-            setCcError('Both fields are required.')
-            return
-        }
+        if (!newCC.outstandingBalance || !newCC.minimumDue) return setCcError('Both fields required.')
         setCcError('')
-        set('creditCardDues', [...form.creditCardDues, withId({
-            outstandingBalance: Number(newCC.outstandingBalance),
-            minimumDue:         Number(newCC.minimumDue),
-        })])
+        set('creditCardDues', [...form.creditCardDues, withId({ outstandingBalance: Number(newCC.outstandingBalance), minimumDue: Number(newCC.minimumDue) })])
         setNewCC({ outstandingBalance: '', minimumDue: '' })
     }
 
     const handleAddLoan = () => {
-        const { principalOutstanding, monthlyEMI, remainingTenureMonths, interestRate } = newLoan
-        if (!principalOutstanding || !monthlyEMI || !remainingTenureMonths || !interestRate) {
-            setLoanError('All fields are required.')
-            return
-        }
+        if (!newLoan.principalOutstanding || !newLoan.monthlyEMI || !newLoan.remainingTenureMonths || !newLoan.interestRate) return setLoanError('All fields required.')
         setLoanError('')
         set('otherLoans', [...form.otherLoans, withId({
-            principalOutstanding:  Number(principalOutstanding),
-            monthlyEMI:            Number(monthlyEMI),
-            remainingTenureMonths: Number(remainingTenureMonths),
-            interestRate:          Number(interestRate),
+            principalOutstanding: Number(newLoan.principalOutstanding), monthlyEMI: Number(newLoan.monthlyEMI),
+            remainingTenureMonths: Number(newLoan.remainingTenureMonths), interestRate: Number(newLoan.interestRate),
         })])
         setNewLoan({ principalOutstanding: '', monthlyEMI: '', remainingTenureMonths: '', interestRate: '' })
     }
 
     const handleAddInquiry = () => {
-        if (newInquiry.monthsAgo === '' || !newInquiry.status) {
-            setInquiryError('Both fields are required.')
-            return
-        }
+        if (!newInquiry.monthsAgo || !newInquiry.status) return setInquiryError('Both fields required.')
         setInquiryError('')
-        set('recentLoanInquiries', [...form.recentLoanInquiries, withId({
-            monthsAgo: Number(newInquiry.monthsAgo),
-            status:    newInquiry.status,
-        })])
+        set('recentLoanInquiries', [...form.recentLoanInquiries, withId({ monthsAgo: Number(newInquiry.monthsAgo), status: newInquiry.status })])
         setNewInquiry({ monthsAgo: '', status: '' })
     }
 
-    // ── Render ───────────────────────────────────────────────────────────────
     if (loading) return <LoadingScreen />
 
     return (
-        <div className="flex flex-col gap-8 text-bodyText font-sans m-5 max-w-3xl">
+        <div className="max-w-6xl w-full mx-auto px-6 py-8 flex flex-col gap-8 font-inter animate-fade-up">
 
             {/* Header */}
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <p className="text-3xl font-black text-heading">Financial Profile 📋</p>
-                    <p className="text-sm text-bodyText/60 mt-1">Your financial data powers every loan eligibility check.</p>
+                    <h1 className="text-[40px] font-black text-sidebar-bg tracking-[-0.03em] leading-tight py-4">Financial Profile</h1>
+                    <p className="text-sm font-medium text-text-muted mt-1">Your financial foundation for eligibility checks.</p>
                 </div>
                 {profile && !editing && (
-                    <div className="flex gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setEditing(true)}
-                            className="border border-borderColour hover:bg-card duration-300 font-bold px-4 py-2 rounded-full text-sm text-bodyText"
-                        >
-                            Edit
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setConfirmDel(true)}
-                            className="border border-danger/40 hover:bg-danger/10 duration-300 font-bold px-4 py-2 rounded-full text-sm text-danger"
-                        >
+                    <div className="flex gap-3">
+                        <button onClick={() => setConfirmDel(true)} className="px-4 py-2 rounded-[9px] border border-border-default text-rose text-sm font-semibold hover:bg-rose-light hover:border-rose-light transition-colors duration-200">
                             Delete
+                        </button>
+                        <button onClick={() => setEditing(true)} className="px-4 py-2 rounded-[9px] border border-border-default text-text-primary text-sm font-semibold hover:bg-[#F5F5F4] transition-colors duration-200">
+                            Edit Profile
                         </button>
                     </div>
                 )}
-                {editing && (
-                    <button
-                        type="button"
-                        onClick={handleCancel}
-                        className="border border-borderColour hover:bg-card duration-300 font-bold px-4 py-2 rounded-full text-sm text-bodyText"
-                    >
-                        Cancel
+                {editing && profile && (
+                    <button onClick={handleCancel} className="px-4 py-2 rounded-[9px] border border-border-default text-text-primary text-sm font-semibold hover:bg-[#F5F5F4] transition-colors duration-200">
+                        Discard Changes
                     </button>
                 )}
             </div>
 
-            {/* Inline delete confirmation */}
             {confirmDel && (
-                <DeleteConfirm
-                    onConfirm={handleDelete}
-                    onCancel={() => setConfirmDel(false)}
-                />
+                <div className="flex flex-col sm:flex-row items-center gap-4 bg-rose-light border border-[#FECDD3] rounded-[14px] px-6 py-4 animate-fade-up">
+                    <AlertCircle className="text-rose shrink-0" size={24} />
+                    <p className="text-rose font-semibold text-sm flex-1">Delete your financial profile? This action cannot be undone.</p>
+                    <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                        <button onClick={() => setConfirmDel(false)} className="flex-1 px-4 py-2 rounded-[9px] border border-[#FECDD3] text-rose bg-white text-sm font-semibold hover:bg-rose-light transition-colors">Cancel</button>
+                        <button onClick={handleDelete} className="flex-1 px-4 py-2 rounded-[9px] bg-rose text-white text-sm font-semibold hover:bg-rose-600 transition-colors shadow-sm">Delete</button>
+                    </div>
+                </div>
             )}
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-8">
 
                 {/* Personal Details */}
-                <div className="bg-card border border-borderColour rounded-xl p-6">
-                    <SectionHeader title="Personal Details" sub="Basic demographic information" />
-                    <div className="grid grid-cols-2 gap-4">
+                <SectionCard title="Personal Details" sub="Demographics and residence" accentColor="bg-primary">
+                    <DisplayGrid>
                         <Input isReadonly={isReadonly} label="Age" type="number" min={18} max={100} value={form.age} onChange={e => set('age', e.target.value)} required />
-                        <Select isReadonly={isReadonly} label="Gender (optional)" options={GENDER} placeholder="Select gender" value={form.gender || ''} onChange={e => set('gender', e.target.value)} />
-                        <Select isReadonly={isReadonly} label="Marital Status" options={MARITAL_STATUS} placeholder="Select" value={form.maritalStatus} onChange={e => set('maritalStatus', e.target.value)} required />
-                        <Select isReadonly={isReadonly} label="City Tier" options={CITY_TIER} placeholder="Select" value={form.cityTier} onChange={e => set('cityTier', e.target.value)} required />
-                        <Select isReadonly={isReadonly} label="Residential Status" options={RESIDENTIAL_STATUS} placeholder="Select" value={form.residentialStatus} onChange={e => set('residentialStatus', e.target.value)} required />
-                        <Select isReadonly={isReadonly} label="Resident Type" options={RESIDENT_TYPE} placeholder="Select" value={form.residentType} onChange={e => set('residentType', e.target.value)} required />
-                    </div>
-                </div>
+                        <Select isReadonly={isReadonly} label="Gender" options={GENDER} placeholder="Select gender" value={form.gender || ''} onChange={e => set('gender', e.target.value)} />
+                        <Select isReadonly={isReadonly} label="Marital Status" options={MARITAL_STATUS} placeholder="Select status" value={form.maritalStatus} onChange={e => set('maritalStatus', e.target.value)} required />
+                        <Select isReadonly={isReadonly} label="City Tier" options={CITY_TIER} placeholder="Select tier" value={form.cityTier} onChange={e => set('cityTier', e.target.value)} required />
+                        <Select isReadonly={isReadonly} label="Residential Status" options={RESIDENTIAL_STATUS} placeholder="Select status" value={form.residentialStatus} onChange={e => set('residentialStatus', e.target.value)} required />
+                        <Select isReadonly={isReadonly} label="Resident Type" options={RESIDENT_TYPE} placeholder="Select type" value={form.residentType} onChange={e => set('residentType', e.target.value)} required />
+                    </DisplayGrid>
+                </SectionCard>
 
                 {/* Employment */}
-                <div className="bg-card border border-borderColour rounded-xl p-6">
-                    <SectionHeader title="Employment" sub="Your current employment situation" />
-                    <div className="grid grid-cols-2 gap-4">
+                <SectionCard title="Employment" sub="Status and income information" accentColor="bg-emerald">
+                    <DisplayGrid>
                         <Select
-                            isReadonly={isReadonly}
-                            label="Employment Type"
-                            options={EMPLOYMENT_TYPE}
-                            placeholder="Select"
-                            value={form.employmentType}
-                            onChange={e => {
-                                set('employmentType', e.target.value)
-                                if (NON_EARNERS.includes(e.target.value)) set('employerType', 'Not Applicable')
-                            }}
-                            required
+                            isReadonly={isReadonly} label="Employment Type" options={EMPLOYMENT_TYPE} placeholder="Select type" value={form.employmentType} required
+                            onChange={e => { set('employmentType', e.target.value); if (NON_EARNERS.includes(e.target.value)) set('employerType', 'Not Applicable'); }}
                         />
-                        <Select
-                            isReadonly={isReadonly}
-                            label="Employer Type"
-                            options={EMPLOYER_TYPE}
-                            placeholder="Select"
-                            value={form.employerType}
-                            onChange={e => set('employerType', e.target.value)}
-                            disabled={isReadonly || isNonEarner}
-                            required
-                        />
-                        <Input
-                            isReadonly={isReadonly}
-                            label="Monthly Net Income (₹)"
-                            type="number"
-                            min={0}
-                            value={form.monthlyNetIncome}
-                            onChange={e => set('monthlyNetIncome', e.target.value)}
-                            disabled={isReadonly || isNonEarner}
-                        />
-                        <Input
-                            isReadonly={isReadonly}
-                            label="Employment Tenure (months)"
-                            type="number"
-                            min={0}
-                            value={form.employmentTenureMonths}
-                            onChange={e => set('employmentTenureMonths', e.target.value)}
-                        />
-                    </div>
-                </div>
+                        <Select isReadonly={isReadonly} label="Employer Type" options={EMPLOYER_TYPE} placeholder="Select type" value={form.employerType} onChange={e => set('employerType', e.target.value)} disabled={isReadonly || isNonEarner} required />
+                        <Input isReadonly={isReadonly} label="Net Income (per month)" type="number" min={0} value={form.monthlyNetIncome} onChange={e => set('monthlyNetIncome', e.target.value)} disabled={isReadonly || isNonEarner} />
+                        <Input isReadonly={isReadonly} label="Tenure (months)" type="number" min={0} value={form.employmentTenureMonths} onChange={e => set('employmentTenureMonths', e.target.value)} />
+                    </DisplayGrid>
+                </SectionCard>
 
                 {/* Credit Profile */}
-                <div className="bg-card border border-borderColour rounded-xl p-6">
-                    <SectionHeader title="Credit Profile" sub="Credit health indicators" />
-                    <div className="grid grid-cols-2 gap-4">
+                <SectionCard title="Credit Profile" sub="Credit health indicators" accentColor="bg-amber-500">
+                    <DisplayGrid>
                         <Input isReadonly={isReadonly} label="Credit Score (0–900)" type="number" min={0} max={900} value={form.creditScore} onChange={e => set('creditScore', e.target.value)} required />
-                        <Select isReadonly={isReadonly} label="Payment History" options={PAYMENT_HISTORY_FLAG} placeholder="Select" value={form.paymentHistoryFlag} onChange={e => set('paymentHistoryFlag', e.target.value)} required />
-                    </div>
-                </div>
+                        <Select isReadonly={isReadonly} label="Payment History" options={PAYMENT_HISTORY_FLAG} placeholder="Select history" value={form.paymentHistoryFlag} onChange={e => set('paymentHistoryFlag', e.target.value)} required />
+                    </DisplayGrid>
+                </SectionCard>
 
                 {/* Existing EMIs */}
-                <div className="bg-card border border-borderColour rounded-xl p-6">
-                    <SectionHeader title="Existing EMIs" sub="Current EMI obligations" />
-                    <div className="flex flex-col gap-2 mb-4">
-                        {form.existingEmis.length === 0 && <p className="text-sm text-bodyText/40 italic">No EMIs added.</p>}
+                <SectionCard title="Existing EMIs" sub="Current monthly obligations" accentColor="bg-rose">
+                    <div className="flex flex-col gap-3 mb-6">
+                        {form.existingEmis.length === 0 && <p className="text-sm font-medium text-text-muted">No EMIs documented.</p>}
                         {form.existingEmis.map((e) => (
-                            <div key={e._id} className="flex items-center justify-between bg-white border border-borderColour rounded-lg px-4 py-2 text-sm">
-                                <p>₹{e.monthlyAmount}/mo · {e.remainingTenureMonths} months left</p>
-                                {!isReadonly && (
-                                    <button type="button" onClick={() => set('existingEmis', form.existingEmis.filter(x => x._id !== e._id))} className="text-danger text-xs font-bold">Remove</button>
-                                )}
-                            </div>
+                            <ListItem key={e._id} onRemove={() => set('existingEmis', form.existingEmis.filter(x => x._id !== e._id))} isReadonly={isReadonly}>
+                                <span className="font-bold">{fmt(e.monthlyAmount)}</span><span className="text-text-muted"> / mo · {e.remainingTenureMonths} months left</span>
+                            </ListItem>
                         ))}
                     </div>
                     {!isReadonly && (
-                        <>
-                            <div className="grid grid-cols-3 gap-3">
-                                <Field label="Monthly Amount (₹)">
-                                    <input className={INPUT_CLASS} type="number" min={0} value={newEmi.monthlyAmount} onChange={e => setNewEmi(p => ({ ...p, monthlyAmount: e.target.value }))} />
+                        <div className="bg-[#F8F7F4] p-4 rounded-xl border border-border-default space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <Field label="Amount (₹)">
+                                    <input className={INPUT_CLASS} type="number" min={0} value={newEmi.monthlyAmount} onChange={e => setNewEmi(p => ({ ...p, monthlyAmount: e.target.value }))} placeholder="Amount" />
                                 </Field>
-                                <Field label="Remaining Months">
-                                    <input className={INPUT_CLASS} type="number" min={0} value={newEmi.remainingTenureMonths} onChange={e => setNewEmi(p => ({ ...p, remainingTenureMonths: e.target.value }))} />
+                                <Field label="Months Left">
+                                    <input className={INPUT_CLASS} type="number" min={0} value={newEmi.remainingTenureMonths} onChange={e => setNewEmi(p => ({ ...p, remainingTenureMonths: e.target.value }))} placeholder="Months" />
                                 </Field>
                                 <div className="flex items-end">
-                                    <button type="button" onClick={handleAddEmi} className="bg-button hover:bg-buttonHover duration-300 text-white font-bold px-4 py-2 rounded-lg text-sm w-full">Add</button>
+                                    <button type="button" onClick={handleAddEmi} className="bg-white border border-border-default hover:border-primary text-primary font-semibold px-4 py-2.5 rounded-[9px] shadow-sm text-sm w-full transition-colors">Add EMI</button>
                                 </div>
                             </div>
-                            {emiError && <p className="text-danger text-xs mt-2">{emiError}</p>}
-                        </>
+                            {emiError && <p className="text-rose text-xs font-medium"><AlertCircle className="inline w-3 h-3 mr-1" />{emiError}</p>}
+                        </div>
                     )}
-                </div>
+                </SectionCard>
 
                 {/* Credit Card Dues */}
-                <div className="bg-card border border-borderColour rounded-xl p-6">
-                    <SectionHeader title="Credit Card Dues" sub="Outstanding credit card balances" />
-                    <div className="flex flex-col gap-2 mb-4">
-                        {form.creditCardDues.length === 0 && <p className="text-sm text-bodyText/40 italic">No credit card dues added.</p>}
+                <SectionCard title="Credit Card Dues" sub="Current card balances" accentColor="bg-rose">
+                    <div className="flex flex-col gap-3 mb-6">
+                        {form.creditCardDues.length === 0 && <p className="text-sm font-medium text-text-muted">No credit card dues.</p>}
                         {form.creditCardDues.map((c) => (
-                            <div key={c._id} className="flex items-center justify-between bg-white border border-borderColour rounded-lg px-4 py-2 text-sm">
-                                <p>Balance: ₹{c.outstandingBalance} · Min Due: ₹{c.minimumDue}</p>
-                                {!isReadonly && (
-                                    <button type="button" onClick={() => set('creditCardDues', form.creditCardDues.filter(x => x._id !== c._id))} className="text-danger text-xs font-bold">Remove</button>
-                                )}
-                            </div>
+                            <ListItem key={c._id} onRemove={() => set('creditCardDues', form.creditCardDues.filter(x => x._id !== c._id))} isReadonly={isReadonly}>
+                                <span className="text-text-muted">Balance: </span><span className="font-bold">{fmt(c.outstandingBalance)}</span>
+                                <span className="text-text-muted mx-2">|</span>
+                                <span className="text-text-muted">Min Due: </span><span className="font-bold">{fmt(c.minimumDue)}</span>
+                            </ListItem>
                         ))}
                     </div>
                     {!isReadonly && (
-                        <>
-                            <div className="grid grid-cols-3 gap-3">
-                                <Field label="Outstanding Balance (₹)">
-                                    <input className={INPUT_CLASS} type="number" min={0} value={newCC.outstandingBalance} onChange={e => setNewCC(p => ({ ...p, outstandingBalance: e.target.value }))} />
+                        <div className="bg-[#F8F7F4] p-4 rounded-xl border border-border-default space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <Field label="Total Balance (₹)">
+                                    <input className={INPUT_CLASS} type="number" min={0} value={newCC.outstandingBalance} onChange={e => setNewCC(p => ({ ...p, outstandingBalance: e.target.value }))} placeholder="Balance" />
                                 </Field>
                                 <Field label="Minimum Due (₹)">
-                                    <input className={INPUT_CLASS} type="number" min={0} value={newCC.minimumDue} onChange={e => setNewCC(p => ({ ...p, minimumDue: e.target.value }))} />
+                                    <input className={INPUT_CLASS} type="number" min={0} value={newCC.minimumDue} onChange={e => setNewCC(p => ({ ...p, minimumDue: e.target.value }))} placeholder="Min Due" />
                                 </Field>
                                 <div className="flex items-end">
-                                    <button type="button" onClick={handleAddCC} className="bg-button hover:bg-buttonHover duration-300 text-white font-bold px-4 py-2 rounded-lg text-sm w-full">Add</button>
+                                    <button type="button" onClick={handleAddCC} className="bg-white border border-border-default hover:border-primary text-primary font-semibold px-4 py-2.5 rounded-[9px] shadow-sm text-sm w-full transition-colors">Add Card</button>
                                 </div>
                             </div>
-                            {ccError && <p className="text-danger text-xs mt-2">{ccError}</p>}
-                        </>
+                            {ccError && <p className="text-rose text-xs font-medium"><AlertCircle className="inline w-3 h-3 mr-1" />{ccError}</p>}
+                        </div>
                     )}
-                </div>
+                </SectionCard>
 
                 {/* Other Loans */}
-                <div className="bg-card border border-borderColour rounded-xl p-6">
-                    <SectionHeader title="Other Loans" sub="Any other active loans" />
-                    <div className="flex flex-col gap-2 mb-4">
-                        {form.otherLoans.length === 0 && <p className="text-sm text-bodyText/40 italic">No other loans added.</p>}
+                <SectionCard title="Other Loans" sub="Active major loans" accentColor="bg-rose">
+                    <div className="flex flex-col gap-3 mb-6">
+                        {form.otherLoans.length === 0 && <p className="text-sm font-medium text-text-muted">No other loans.</p>}
                         {form.otherLoans.map((l) => (
-                            <div key={l._id} className="flex items-center justify-between bg-white border border-borderColour rounded-lg px-4 py-2 text-sm">
-                                <p>₹{l.principalOutstanding} outstanding · ₹{l.monthlyEMI}/mo · {l.remainingTenureMonths}mo · {l.interestRate}%</p>
-                                {!isReadonly && (
-                                    <button type="button" onClick={() => set('otherLoans', form.otherLoans.filter(x => x._id !== l._id))} className="text-danger text-xs font-bold">Remove</button>
-                                )}
-                            </div>
+                            <ListItem key={l._id} onRemove={() => set('otherLoans', form.otherLoans.filter(x => x._id !== l._id))} isReadonly={isReadonly}>
+                                <span className="font-bold">{fmt(l.principalOutstanding)}</span><span className="text-text-muted"> left · </span>
+                                <span className="font-bold">{fmt(l.monthlyEMI)}</span><span className="text-text-muted">/mo · {l.remainingTenureMonths}mo · {l.interestRate}%</span>
+                            </ListItem>
                         ))}
                     </div>
                     {!isReadonly && (
-                        <>
-                            <div className="grid grid-cols-2 gap-3">
-                                <Field label="Principal Outstanding (₹)">
-                                    <input className={INPUT_CLASS} type="number" min={0} value={newLoan.principalOutstanding} onChange={e => setNewLoan(p => ({ ...p, principalOutstanding: e.target.value }))} />
-                                </Field>
-                                <Field label="Monthly EMI (₹)">
-                                    <input className={INPUT_CLASS} type="number" min={0} value={newLoan.monthlyEMI} onChange={e => setNewLoan(p => ({ ...p, monthlyEMI: e.target.value }))} />
-                                </Field>
-                                <Field label="Remaining Months">
-                                    <input className={INPUT_CLASS} type="number" min={0} value={newLoan.remainingTenureMonths} onChange={e => setNewLoan(p => ({ ...p, remainingTenureMonths: e.target.value }))} />
-                                </Field>
-                                <Field label="Interest Rate (%)">
-                                    <input className={INPUT_CLASS} type="number" min={0} max={100} value={newLoan.interestRate} onChange={e => setNewLoan(p => ({ ...p, interestRate: e.target.value }))} />
-                                </Field>
-                                <div className="col-span-2">
-                                    <button type="button" onClick={handleAddLoan} className="bg-button hover:bg-buttonHover duration-300 text-white font-bold px-4 py-2 rounded-lg text-sm">Add Loan</button>
+                        <div className="bg-[#F8F7F4] p-4 rounded-xl border border-border-default space-y-4">
+                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                                <div className="lg:col-span-2">
+                                    <Field label="Principal (₹)">
+                                        <input className={INPUT_CLASS} type="number" min={0} value={newLoan.principalOutstanding} onChange={e => setNewLoan(p => ({ ...p, principalOutstanding: e.target.value }))} placeholder="Principal" />
+                                    </Field>
                                 </div>
+                                <Field label="EMI (₹)">
+                                    <input className={INPUT_CLASS} type="number" min={0} value={newLoan.monthlyEMI} onChange={e => setNewLoan(p => ({ ...p, monthlyEMI: e.target.value }))} placeholder="EMI" />
+                                </Field>
+                                <Field label="Months">
+                                    <input className={INPUT_CLASS} type="number" min={0} value={newLoan.remainingTenureMonths} onChange={e => setNewLoan(p => ({ ...p, remainingTenureMonths: e.target.value }))} placeholder="Months" />
+                                </Field>
+                                <Field label="Rate (%)">
+                                    <input className={INPUT_CLASS} type="number" min={0} max={100} value={newLoan.interestRate} onChange={e => setNewLoan(p => ({ ...p, interestRate: e.target.value }))} placeholder="%" />
+                                </Field>
                             </div>
-                            {loanError && <p className="text-danger text-xs mt-2">{loanError}</p>}
-                        </>
+                            <button type="button" onClick={handleAddLoan} className="block w-full sm:w-auto bg-white border border-border-default hover:border-primary text-primary font-semibold px-6 py-2.5 rounded-[9px] shadow-sm text-sm transition-colors mt-2">Add Loan</button>
+                            {loanError && <p className="text-rose text-xs font-medium"><AlertCircle className="inline w-3 h-3 mr-1" />{loanError}</p>}
+                        </div>
                     )}
-                </div>
+                </SectionCard>
 
-                {/* Recent Loan Inquiries */}
-                <div className="bg-card border border-borderColour rounded-xl p-6">
-                    <SectionHeader title="Recent Loan Inquiries" sub="Loan applications in the last 12 months" />
-                    <div className="flex flex-col gap-2 mb-4">
-                        {form.recentLoanInquiries.length === 0 && <p className="text-sm text-bodyText/40 italic">No recent inquiries added.</p>}
+                {/* Inquiries */}
+                <SectionCard title="Recent Inquiries" sub="Inquiries within last 12 months" accentColor="bg-amber-500">
+                    <div className="flex flex-col gap-3 mb-6">
+                        {form.recentLoanInquiries.length === 0 && <p className="text-sm font-medium text-text-muted">No recent inquiries.</p>}
                         {form.recentLoanInquiries.map((r) => (
-                            <div key={r._id} className="flex items-center justify-between bg-white border border-borderColour rounded-lg px-4 py-2 text-sm">
-                                <p>{r.monthsAgo} months ago · {r.status}</p>
-                                {!isReadonly && (
-                                    <button type="button" onClick={() => set('recentLoanInquiries', form.recentLoanInquiries.filter(x => x._id !== r._id))} className="text-danger text-xs font-bold">Remove</button>
-                                )}
-                            </div>
+                            <ListItem key={r._id} onRemove={() => set('recentLoanInquiries', form.recentLoanInquiries.filter(x => x._id !== r._id))} isReadonly={isReadonly}>
+                                <span className="font-bold">{r.monthsAgo}</span><span className="text-text-muted"> months ago · </span>
+                                <span className="font-bold">{r.status}</span>
+                            </ListItem>
                         ))}
                     </div>
                     {!isReadonly && (
-                        <>
-                            <div className="grid grid-cols-3 gap-3">
+                        <div className="bg-[#F8F7F4] p-4 rounded-xl border border-border-default space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <Field label="Months Ago">
-                                    <input className={INPUT_CLASS} type="number" min={0} value={newInquiry.monthsAgo} onChange={e => setNewInquiry(p => ({ ...p, monthsAgo: e.target.value }))} />
+                                    <input className={INPUT_CLASS} type="number" min={0} max={12} value={newInquiry.monthsAgo} onChange={e => setNewInquiry(p => ({ ...p, monthsAgo: e.target.value }))} placeholder="Months" />
                                 </Field>
                                 <Field label="Status">
                                     <select className={INPUT_CLASS} value={newInquiry.status} onChange={e => setNewInquiry(p => ({ ...p, status: e.target.value }))}>
-                                        <option value="">Select</option>
+                                        <option value="" disabled className="text-text-muted">Select status</option>
                                         {STATUS.map(s => <option key={s} value={s}>{s}</option>)}
                                     </select>
                                 </Field>
                                 <div className="flex items-end">
-                                    <button type="button" onClick={handleAddInquiry} className="bg-button hover:bg-buttonHover duration-300 text-white font-bold px-4 py-2 rounded-lg text-sm w-full">Add</button>
+                                    <button type="button" onClick={handleAddInquiry} className="bg-white border border-border-default hover:border-primary text-primary font-semibold px-4 py-2.5 rounded-[9px] shadow-sm text-sm w-full transition-colors">Add Inquiry</button>
                                 </div>
                             </div>
-                            {inquiryError && <p className="text-danger text-xs mt-2">{inquiryError}</p>}
-                        </>
+                            {inquiryError && <p className="text-rose text-xs font-medium"><AlertCircle className="inline w-3 h-3 mr-1" />{inquiryError}</p>}
+                        </div>
                     )}
-                </div>
+                </SectionCard>
 
-                {/* Submit */}
+                {/* Submit Action */}
                 {!isReadonly && (
-                    <button
-                        type="submit"
-                        disabled={submitting}
-                        className="bg-button hover:bg-buttonHover duration-300 text-white font-black text-lg px-8 py-3 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {submitting ? 'Saving...' : profile ? 'Update Profile' : 'Save Profile'}
-                    </button>
+                    <div className="pt-2 pb-10">
+                        <button
+                            type="submit"
+                            disabled={submitting}
+                            className="w-full bg-primary hover:bg-primary-hover text-white font-semibold text-base py-3.5 rounded-[9px] shadow-button-primary transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                        >
+                            {submitting ? (
+                                <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving</>
+                            ) : (
+                                <><CheckCircle size={20} /> {profile ? 'Save Changes' : 'Create Profile'}</>
+                            )}
+                        </button>
+                    </div>
                 )}
-
             </form>
         </div>
     )

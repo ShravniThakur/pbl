@@ -2,6 +2,7 @@ import { useContext, useEffect, useMemo, useState } from "react"
 import { AppContext } from "../context/AppContext"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
+import { CheckCircle2, Search, XCircle } from "lucide-react"
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -16,18 +17,18 @@ const fmt = (n) => `₹${Number(n).toLocaleString('en-IN')}`
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 const LoadingScreen = () => (
-    <div className="flex items-center justify-center min-h-screen text-accentSoft text-xl font-bold">
-        <span className="animate-pulse">Loading...</span>
+    <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-10 h-10 border-4 border-border-default border-t-primary rounded-full animate-spin"></div>
     </div>
 )
 
 const TypePill = ({ label, active, onClick }) => (
     <button
         onClick={onClick}
-        className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors duration-200
+        className={`px-4 py-2 rounded-full text-[13px] font-bold border transition-colors duration-200
                     ${active
-                        ? 'bg-button text-white border-button'
-                        : 'bg-card border-borderColour text-bodyText hover:border-button/50 hover:text-accentSoft'
+                        ? 'bg-primary text-white border-primary shadow-sm shadow-primary/20'
+                        : 'bg-white border-border-default text-text-muted hover:border-primary/50 hover:text-primary hover:bg-[#F8F7F4]'
                     }`}
     >
         {label}
@@ -44,80 +45,79 @@ const ProductCard = ({ product }) => {
     } = product
 
     return (
-        <div className="bg-card border border-borderColour rounded-xl overflow-hidden
-                        hover:border-button/40 hover:shadow-sm transition-all duration-200 flex flex-col">
-
+        <div className="relative bg-surface border border-border-default rounded-[14px] overflow-hidden flex flex-col transition-shadow hover:shadow-card hover:border-primary/40">
             {/* Card header */}
-            <div className="p-5 flex items-start gap-3 border-b border-borderColour">
-                {logoUrl ? (
-                    <img
-                        src={logoUrl}
-                        alt={bankName}
-                        className="w-11 h-11 rounded-lg object-contain border border-borderColour bg-white p-1 flex-shrink-0"
-                        onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}
-                    />
-                ) : null}
-                <div
-                    className="w-11 h-11 rounded-lg bg-slate-100 border border-borderColour
-                               items-center justify-center flex-shrink-0"
-                    style={{ display: logoUrl ? 'none' : 'flex' }}
-                >
-                    <span className="text-accentSoft font-black text-base">{bankName.charAt(0)}</span>
+            <div className="p-5 sm:p-6 flex flex-col gap-5 flex-1 relative z-0">
+                <div className="flex items-start gap-3.5 pr-2">
+                    {logoUrl ? (
+                         <div className="w-12 h-12 rounded-[10px] bg-white border border-border-default p-1.5 flex items-center justify-center shrink-0 shadow-sm">
+                             <img src={logoUrl} alt={bankName} className="w-full h-full object-contain" />
+                         </div>
+                    ) : (
+                         <div className="w-12 h-12 rounded-[10px] bg-[#F8F7F4] border border-border-default flex items-center justify-center shrink-0 shadow-sm">
+                             <span className="text-primary font-black text-lg">{bankName.charAt(0)}</span>
+                         </div>
+                    )}
+                    <div className="flex flex-col justify-center min-w-0 pt-0.5">
+                        <p className="text-[16px] font-bold text-text-primary leading-snug truncate">{productName}</p>
+                        <p className="text-[13px] font-medium text-text-muted mt-0.5 truncate">{bankName}</p>
+                    </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                    <p className="text-heading font-black text-sm leading-snug truncate">{productName}</p>
-                    <p className="text-bodyText/50 text-xs mt-0.5">{bankName}</p>
-                    <span className="inline-block mt-1.5 text-[10px] font-bold uppercase tracking-wide
-                                     bg-button/10 text-accentSoft border border-button/20 px-2 py-0.5 rounded-full">
+
+                {/* Badge */}
+                <div>
+                     <span className="inline-block bg-[#F5F5F4] text-text-primary border border-border-default px-2.5 py-1 rounded-[6px] text-[11px] font-bold uppercase tracking-[0.05em]">
                         {loanType}
                     </span>
                 </div>
-            </div>
 
-            {/* Key stats */}
-            <div className="grid grid-cols-3 gap-px bg-borderColour border-b border-borderColour">
-                {[
-                    { label: 'Interest Rate', value: `${minInterestRate}% – ${maxInterestRate}%` },
-                    { label: 'Loan Amount',   value: `${fmt(minAmount)} – ${fmt(maxAmount)}` },
-                    { label: 'Tenure',        value: `${minTenureMonths} – ${maxTenureMonths} mo` },
-                ].map(({ label, value }) => (
-                    <div key={label} className="bg-card px-3 py-3 text-center">
-                        <p className="text-bodyText/40 text-[9px] uppercase tracking-wide mb-1">{label}</p>
-                        <p className="text-accentSoft font-black text-[11px] leading-tight">{value}</p>
-                    </div>
-                ))}
-            </div>
-
-            {/* Description + features */}
-            <div className="p-5 flex flex-col gap-3 flex-1">
+                {/* Description */}
                 {description && (
-                    <p className="text-bodyText/60 text-xs leading-relaxed line-clamp-2">{description}</p>
+                    <p className="text-[13px] font-medium text-text-muted leading-relaxed line-clamp-2">{description}</p>
                 )}
 
+                {/* Stats Grid */}
+                <div className="grid grid-cols-3 gap-2 mt-auto">
+                    {[
+                        { label: 'Interest',   value: `${minInterestRate}–${maxInterestRate}%` },
+                        { label: 'Amt range',  value: `${fmt(minAmount).replace('₹', '')}–${fmt(maxAmount).replace('₹', '')}` },
+                        { label: 'Term',       value: `${minTenureMonths}–${maxTenureMonths} m` },
+                    ].map(({ label, value }) => (
+                         <div key={label} className="bg-[#F8F7F4] border border-border-default rounded-[9px] px-2 py-2.5 text-center flex flex-col justify-center">
+                             <p className="text-[10px] font-semibold text-text-muted uppercase tracking-[0.05em] mb-1 truncate">{label}</p>
+                             <p className="text-[13px] font-bold text-primary leading-none truncate">{value}</p>
+                         </div>
+                    ))}
+                </div>
+
+                {/* Features */}
                 {features?.length > 0 && (
-                    <ul className="flex flex-col gap-1.5">
-                        {features.slice(0, 3).map((f, i) => (
-                            <li key={i} className="flex items-start gap-2 text-xs text-bodyText/70">
-                                <span className="text-success font-bold flex-shrink-0 mt-0.5">✓</span>
-                                {f}
-                            </li>
-                        ))}
-                    </ul>
+                     <div className="pt-4 border-t border-border-default mt-1">
+                         <ul className="flex flex-col gap-2">
+                             {features.slice(0, 3).map((f, i) => (
+                                 <li key={i} className="flex items-start gap-2.5 text-[13px] font-medium text-text-primary leading-snug">
+                                     <CheckCircle2 size={16} className="text-emerald shrink-0 mt-[1px]" />
+                                     <span>{f}</span>
+                                 </li>
+                             ))}
+                         </ul>
+                     </div>
                 )}
             </div>
 
             {/* Eligibility footer */}
-            <div className="px-5 pb-5 flex flex-wrap gap-3 border-t border-borderColour pt-4">
+            <div className="bg-[#F8F7F4] border-t border-border-default px-5 sm:px-6 py-4 flex gap-6 items-center">
                 <div className="flex flex-col">
-                    <p className="text-[10px] text-bodyText/40 uppercase tracking-wide">Min Credit Score</p>
-                    <p className="text-sm font-black text-heading">
-                        {minCreditScore === 0 ? 'No min' : minCreditScore}
+                    <p className="text-[10px] text-text-muted uppercase tracking-[0.05em] font-bold mb-1">Min Credit</p>
+                    <p className="text-[14px] font-black text-text-primary leading-none">
+                        {minCreditScore === 0 ? 'None' : minCreditScore}
                     </p>
                 </div>
+                <div className="w-[1px] h-6 bg-border-default"></div>
                 <div className="flex flex-col">
-                    <p className="text-[10px] text-bodyText/40 uppercase tracking-wide">Min Monthly Income</p>
-                    <p className="text-sm font-black text-heading">
-                        {minMonthlyIncome === 0 ? 'No min' : fmt(minMonthlyIncome)}
+                    <p className="text-[10px] text-text-muted uppercase tracking-[0.05em] font-bold mb-1">Min Income</p>
+                    <p className="text-[14px] font-black text-text-primary leading-none">
+                        {minMonthlyIncome === 0 ? 'None' : fmt(minMonthlyIncome)}
                     </p>
                 </div>
             </div>
@@ -167,18 +167,18 @@ const LoanProducts = () => {
     if (loading) return <LoadingScreen />
 
     return (
-        <div className="flex flex-col gap-8 text-bodyText font-sans m-5">
+        <div className="max-w-7xl w-full mx-auto px-8 md:px-12 py-12 md:py-16 flex flex-col gap-10 font-inter animate-fade-up">
 
             {/* Header */}
             <div>
-                <p className="text-3xl font-black text-heading">Loan Products ★</p>
-                <p className="text-sm text-bodyText/60 mt-1">
-                    Browse all available loan products from top lenders.
+                <h1 className="text-[40px] font-black text-sidebar-bg tracking-[-0.03em] leading-tight py-4">Loan Products Directory</h1>
+                <p className="text-sm font-medium text-text-muted mt-1">
+                    Explore terms, rates, and requirements for top financial products.
                 </p>
             </div>
 
-            {/* Summary stat */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+            {/* Summary stat cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
                 {['All', ...LOAN_TYPES].map(type => {
                     const count = type === 'All'
                         ? products.length
@@ -187,18 +187,18 @@ const LoanProducts = () => {
                         <button
                             key={type}
                             onClick={() => { setActiveType(type); setSearch('') }}
-                            className={`bg-card border rounded-2xl p-4 text-left hover:bg-cardHover
-                                        duration-300 transition-all
+                            className={`bg-surface border rounded-[14px] p-4 text-left hover:shadow-sm
+                                        duration-200 transition-all flex flex-col justify-center
                                         ${activeType === type
-                                            ? 'border-button/50 ring-1 ring-button/20'
-                                            : 'border-borderColour'
+                                            ? 'border-primary/50 ring-1 ring-primary/20 shadow-sm'
+                                            : 'border-border-default hover:border-primary/30'
                                         }`}
                         >
-                            <p className={`text-2xl font-black ${activeType === type ? 'text-accentSoft' : 'text-heading'}`}>
+                            <p className={`text-[24px] font-black leading-none mb-1 ${activeType === type ? 'text-primary' : 'text-text-primary'}`}>
                                 {count}
                             </p>
-                            <p className="text-xs text-bodyText/50 mt-1 font-semibold leading-tight">
-                                {type === 'All' ? 'All Products' : type}
+                            <p className="text-[12px] font-semibold text-text-muted uppercase tracking-[0.05em]">
+                                {type === 'All' ? 'All Products' : type.replace(' Loan', '')}
                             </p>
                         </button>
                     )
@@ -206,7 +206,7 @@ const LoanProducts = () => {
             </div>
 
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
                 {/* Type pills */}
                 <div className="flex flex-wrap gap-2">
                     {['All', ...LOAN_TYPES].map(type => (
@@ -220,47 +220,55 @@ const LoanProducts = () => {
                 </div>
 
                 {/* Search */}
-                <input
-                    type="text"
-                    placeholder="Search bank or product..."
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    className="bg-card border border-borderColour rounded-lg px-4 py-2 text-bodyText
-                               text-sm focus:outline-none focus:border-button transition-colors duration-200
-                               w-full sm:w-56"
-                />
+                <div className="relative w-full lg:w-64">
+                    <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted z-10" />
+                    <input
+                        type="text"
+                        placeholder="Search banks or products..."
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        className="bg-white border border-border-default rounded-full pl-10 pr-4 py-2.5 text-text-primary
+                                   text-sm font-medium focus:outline-none focus:border-primary focus:shadow-[0_0_0_3px_rgba(79,70,229,0.15)]
+                                   transition-shadow duration-200 w-full placeholder:text-text-muted"
+                    />
+                    {search && (
+                        <button onClick={() => setSearch('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary">
+                            <XCircle size={16} />
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Results count */}
             {(activeType !== 'All' || search) && (
-                <div className="flex items-center justify-between -mt-4">
-                    <p className="text-sm text-bodyText/50">
-                        {filtered.length} product{filtered.length !== 1 ? 's' : ''} found
+                <div className="flex items-center justify-between -mt-3">
+                    <p className="text-sm font-semibold text-text-muted">
+                        Showing <span className="text-text-primary">{filtered.length}</span> {filtered.length === 1 ? 'product' : 'products'}
                     </p>
-                    {(activeType !== 'All' || search) && (
-                        <button
-                            onClick={() => { setActiveType('All'); setSearch('') }}
-                            className="text-xs text-accentSoft font-semibold hover:text-buttonHover duration-200"
-                        >
-                            Clear filters
-                        </button>
-                    )}
+                    <button
+                        onClick={() => { setActiveType('All'); setSearch('') }}
+                        className="text-sm font-bold text-primary hover:text-primary-hover transition-colors"
+                    >
+                        Clear filters
+                    </button>
                 </div>
             )}
 
             {/* Product grid */}
             {filtered.length === 0 ? (
-                <div className="bg-card border border-borderColour rounded-2xl p-12 text-center">
-                    <p className="text-bodyText/50 mb-2">No products found.</p>
+                <div className="bg-[#F8F7F4] border border-border-default rounded-[14px] p-12 text-center flex flex-col items-center">
+                    <Search size={40} className="text-text-muted/50 mb-4" />
+                    <p className="text-text-primary font-bold text-lg mb-1">No products found</p>
+                    <p className="text-text-muted text-sm font-medium mb-4">Try adjusting your filters or search query.</p>
                     <button
                         onClick={() => { setActiveType('All'); setSearch('') }}
-                        className="text-accentSoft text-sm font-semibold hover:text-buttonHover duration-200"
+                        className="text-primary font-bold text-sm bg-primary/10 px-5 py-2 rounded-lg hover:bg-primary/20 transition-colors"
                     >
-                        Clear filters →
+                        Clear filters
                     </button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10 max-w-[1150px] mx-auto w-full">
                     {filtered.map(p => (
                         <ProductCard key={p._id} product={p} />
                     ))}
@@ -268,20 +276,20 @@ const LoanProducts = () => {
             )}
 
             {/* CTA */}
-            <div className="bg-card border border-borderColour rounded-2xl p-6
-                            flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="bg-primary/5 border border-primary/20 rounded-[14px] p-6 sm:p-8
+                            flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                 <div>
-                    <p className="text-heading font-black text-lg">Ready to check your eligibility?</p>
-                    <p className="text-sm text-bodyText/60 mt-0.5">
-                        Run a check to see which products you qualify for.
+                    <p className="text-[20px] font-bold text-primary mb-1">Ready to apply?</p>
+                    <p className="text-sm font-medium text-text-primary/70">
+                        Run an eligibility check to match with the best products for your profile securely using AI.
                     </p>
                 </div>
                 <button
                     onClick={() => navigate('/loan-check')}
-                    className="bg-button hover:bg-buttonHover duration-300 text-white font-bold
-                               px-6 py-2.5 rounded-full text-sm whitespace-nowrap"
+                    className="bg-primary hover:bg-primary-hover duration-200 text-white font-bold
+                               px-6 py-3 rounded-[9px] text-sm whitespace-nowrap shadow-button-primary"
                 >
-                    Check Eligibility →
+                    Check Eligibility
                 </button>
             </div>
 

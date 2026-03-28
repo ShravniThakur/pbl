@@ -3,6 +3,7 @@ import { AppContext } from "../context/AppContext"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
 import { toast } from "react-toastify"
+import { Camera, Shield, Trash2, User } from "lucide-react"
 
 const AVATAR_PLACEHOLDER = "https://ui-avatars.com/api/?background=random&name=User"
 const PW_REGEX = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$/
@@ -65,19 +66,26 @@ const Settings = () => {
 
     useEffect(() => { fetchUser() }, [fetchUser])
 
-    const inputClass = `bg-white border border-borderColour rounded-lg px-4 py-2.5 text-bodyText text-sm focus:outline-none focus:border-button transition-colors duration-200 w-full`
+    const inputClass = `bg-white border border-border-default rounded-[9px] px-4 py-2.5 text-text-primary text-[14px] font-medium focus:outline-none focus:border-primary focus:shadow-[0_0_0_3px_rgba(79,70,229,0.15)] transition-all duration-200 w-full placeholder:text-text-muted/60`
 
     const Field = ({ label, children }) => (
-        <div className="flex flex-col gap-1">
-            <p className="text-xs font-semibold text-accentSoft uppercase tracking-wide">{label}</p>
+        <div className="flex flex-col gap-2">
+            <p className="text-[12px] font-bold text-text-primary uppercase tracking-[0.05em]">{label}</p>
             {children}
         </div>
     )
 
-    const SectionHeader = ({ title, sub }) => (
-        <div className="border-b border-borderColour pb-3 mb-5">
-            <p className="text-lg font-black text-heading">{title}</p>
-            {sub && <p className="text-xs text-bodyText/50 mt-0.5">{sub}</p>}
+    const SectionHeader = ({ title, sub, icon: Icon }) => (
+        <div className="border-b border-border-default pb-5 mb-6 flex items-start gap-4">
+            {Icon && (
+                <div className="w-10 h-10 rounded-full bg-[#F5F5F4] border border-border-default flex items-center justify-center shrink-0 mt-0.5">
+                    <Icon size={20} className="text-primary" />
+                </div>
+            )}
+            <div className="flex flex-col gap-1">
+                <p className="text-[18px] font-bold text-text-primary tracking-[-0.01em]">{title}</p>
+                {sub && <p className="text-[13px] font-medium text-text-muted">{sub}</p>}
+            </div>
         </div>
     )
 
@@ -185,42 +193,47 @@ const Settings = () => {
     }
 
     if (loading) return (
-        <div className="flex items-center justify-center min-h-screen text-accentSoft text-xl font-bold">
-            Loading...
+        <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="w-10 h-10 border-4 border-border-default border-t-primary rounded-full animate-spin"></div>
         </div>
     )
 
     return (
-        <div className="flex flex-col gap-8 text-bodyText font-sans m-5 max-w-2xl">
+        <div className="max-w-6xl w-full mx-auto px-6 py-8 flex flex-col gap-8 font-inter animate-fade-up">
 
             {/* Header */}
             <div>
-                <p className="text-3xl font-black text-heading">Settings ⚙</p>
-                <p className="text-sm text-bodyText/60 mt-1">Manage your account details and preferences.</p>
+                <h1 className="text-[40px] font-black text-sidebar-bg tracking-[-0.03em] leading-tight py-4">Settings</h1>
+                <p className="text-[14px] font-medium text-text-muted mt-1">Manage your account details and preferences.</p>
             </div>
 
             {/* Update Profile */}
-            <div className="bg-card border border-borderColour rounded-xl p-6">
-                <SectionHeader title="Profile" sub="Update your name, email or profile picture" />
-                <form onSubmit={handleProfileUpdate} className="flex flex-col gap-5">
+            <div className="bg-surface border border-border-default rounded-[14px] p-6 sm:p-8 shadow-sm">
+                <SectionHeader title="Profile Details" sub="Update your personal information and public avatar" icon={User} />
+                <form onSubmit={handleProfileUpdate} className="flex flex-col gap-6 max-w-xl">
 
                     {/* Avatar */}
-                    <div className="flex items-center gap-5">
+                    <div className="flex items-center gap-6">
                         {/* FIX 5: fallback to placeholder if no profilePic */}
-                        <img
-                            src={profilePreview || user?.profilePic || AVATAR_PLACEHOLDER}
-                            alt="Profile"
-                            className="w-16 h-16 rounded-full object-cover border-2 border-borderColour"
-                        />
-                        <div>
+                        <div className="relative group cursor-pointer" onClick={() => fileRef.current.click()}>
+                            <img
+                                src={profilePreview || user?.profilePic || AVATAR_PLACEHOLDER}
+                                alt="Profile"
+                                className="w-20 h-20 rounded-full object-cover border border-border-default group-hover:opacity-80 transition-opacity"
+                            />
+                            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Camera size={20} className="text-white" />
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
                             <button
                                 type="button"
                                 onClick={() => fileRef.current.click()}
-                                className="text-sm text-accentSoft hover:text-buttonHover font-semibold duration-200"
+                                className="text-[13px] font-bold text-primary hover:text-primary-hover transition-colors self-start bg-primary/10 px-3 py-1.5 rounded-[6px]"
                             >
                                 Change photo
                             </button>
-                            <p className="text-xs text-bodyText/40 mt-0.5">JPG, PNG or WEBP</p>
+                            <p className="text-[12px] font-medium text-text-muted">JPG, PNG or WEBP (Max 5MB)</p>
                             <input
                                 ref={fileRef}
                                 type="file"
@@ -231,38 +244,40 @@ const Settings = () => {
                         </div>
                     </div>
 
-                    <Field label="Name">
-                        <input
-                            className={inputClass}
-                            type="text"
-                            value={profileForm.name}
-                            onChange={e => setProfileForm(f => ({ ...f, name: e.target.value }))}
-                        />
-                    </Field>
+                    <div className="grid sm:grid-cols-2 gap-6">
+                        <Field label="Full Name">
+                            <input
+                                className={inputClass}
+                                type="text"
+                                value={profileForm.name}
+                                onChange={e => setProfileForm(f => ({ ...f, name: e.target.value }))}
+                            />
+                        </Field>
 
-                    <Field label="Email">
-                        <input
-                            className={inputClass}
-                            type="email"
-                            value={profileForm.email}
-                            onChange={e => setProfileForm(f => ({ ...f, email: e.target.value }))}
-                        />
-                    </Field>
+                        <Field label="Email Address">
+                            <input
+                                className={inputClass}
+                                type="email"
+                                value={profileForm.email}
+                                onChange={e => setProfileForm(f => ({ ...f, email: e.target.value }))}
+                            />
+                        </Field>
+                    </div>
 
                     <button
                         type="submit"
                         disabled={profileLoading}
-                        className="bg-button hover:bg-buttonHover duration-300 text-white font-black px-6 py-2.5 rounded-full text-sm disabled:opacity-50 disabled:cursor-not-allowed self-start"
+                        className="bg-primary hover:bg-primary-hover duration-200 text-white font-bold px-6 py-2.5 rounded-[9px] text-[13px] shadow-button-primary disabled:opacity-50 disabled:cursor-not-allowed self-start mt-2"
                     >
-                        {profileLoading ? 'Saving...' : 'Save Changes'}
+                        {profileLoading ? 'Saving Changes...' : 'Save Profile Changes'}
                     </button>
                 </form>
             </div>
 
             {/* Change Password */}
-            <div className="bg-card border border-borderColour rounded-xl p-6">
-                <SectionHeader title="Change Password" sub="Choose a strong password to keep your account secure" />
-                <form onSubmit={handlePasswordChange} className="flex flex-col gap-5">
+            <div className="bg-surface border border-border-default rounded-[14px] p-6 sm:p-8 shadow-sm">
+                <SectionHeader title="Security" sub="Update your password to ensure your account stays secure" icon={Shield} />
+                <form onSubmit={handlePasswordChange} className="flex flex-col gap-6 max-w-xl">
 
                     <Field label="Current Password">
                         <input
@@ -277,7 +292,7 @@ const Settings = () => {
 
                     <Field label="New Password">
                         <input
-                            className={`${inputClass} ${pwError ? 'border-danger' : ''}`}
+                            className={`${inputClass} ${pwError ? 'border-rose focus:border-rose focus:shadow-[0_0_0_3px_rgba(244,63,94,0.15)]' : ''}`}
                             type="password"
                             placeholder="Min 8 chars, uppercase, number & symbol"
                             value={pwForm.newPassword}
@@ -285,27 +300,27 @@ const Settings = () => {
                             required
                         />
                         {/* FIX 6: inline validation error */}
-                        {pwError && <p className="text-xs text-danger mt-1">{pwError}</p>}
+                        {pwError && <p className="text-[12px] font-semibold text-rose mt-1 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-rose inline-block" /> {pwError}</p>}
                     </Field>
 
                     <button
                         type="submit"
                         disabled={pwLoading}
-                        className="bg-button hover:bg-buttonHover duration-300 text-white font-black px-6 py-2.5 rounded-full text-sm disabled:opacity-50 disabled:cursor-not-allowed self-start"
+                        className="bg-primary hover:bg-primary-hover duration-200 text-white font-bold px-6 py-2.5 rounded-[9px] text-[13px] shadow-button-primary disabled:opacity-50 disabled:cursor-not-allowed self-start mt-2"
                     >
-                        {pwLoading ? 'Updating...' : 'Update Password'}
+                        {pwLoading ? 'Updating Password...' : 'Update Password'}
                     </button>
                 </form>
             </div>
 
             {/* Danger Zone */}
-            <div className="bg-card border border-danger/20 rounded-xl p-6">
-                <SectionHeader title="Danger Zone" sub="Permanently delete your account and all associated data" />
-                <form onSubmit={handleDeleteAccount} className="flex flex-col gap-5">
+            <div className="bg-surface border border-rose/30 rounded-[14px] p-6 sm:p-8 shadow-sm bg-gradient-to-br from-white to-rose/5">
+                <SectionHeader title="Danger Zone" sub="Permanently delete your account and all associated data" icon={Trash2} />
+                <form onSubmit={handleDeleteAccount} className="flex flex-col gap-6 max-w-xl">
 
-                    <Field label="Enter password to confirm">
+                    <Field label="Enter password to confirm deletion">
                         <input
-                            className={`${inputClass} border-danger/30 focus:border-danger`}
+                            className={`${inputClass} border-rose/40 focus:border-rose focus:shadow-[0_0_0_3px_rgba(244,63,94,0.15)] bg-white`}
                             type="password"
                             placeholder="••••••••"
                             value={deletePassword}
@@ -316,17 +331,22 @@ const Settings = () => {
 
                     {/* FIX 8: inline confirmation prompt instead of window.confirm */}
                     {deleteConfirm && (
-                        <p className="text-xs text-danger font-semibold">
-                            This will permanently delete your account and all data. Click the button again to confirm.
-                        </p>
+                        <div className="bg-rose/10 border border-[#FECDD3] rounded-[9px] p-4 flex gap-3 items-start">
+                            <div className="w-6 h-6 rounded-full bg-rose/20 flex items-center justify-center shrink-0 mt-0.5">
+                                <span className="text-rose font-black text-[12px]">!</span>
+                            </div>
+                            <p className="text-[13px] font-semibold text-rose leading-relaxed">
+                                This action is irreversible. All your loan checks, personal data, and history will be permanently deleted. Click the button below to confirm.
+                            </p>
+                        </div>
                     )}
 
                     <button
                         type="submit"
                         disabled={deleteLoading}
-                        className="border border-danger/40 hover:bg-danger/10 duration-300 text-danger font-black px-6 py-2.5 rounded-full text-sm disabled:opacity-50 disabled:cursor-not-allowed self-start"
+                        className="bg-rose text-white hover:bg-rose/90 duration-200 font-bold px-6 py-2.5 rounded-[9px] text-[13px] shadow-sm shadow-rose/20 disabled:opacity-50 disabled:cursor-not-allowed self-start mt-2"
                     >
-                        {deleteLoading ? 'Deleting...' : deleteConfirm ? 'Yes, delete my account' : 'Delete Account'}
+                        {deleteLoading ? 'Deleting Account...' : deleteConfirm ? 'Yes, Permanently Delete My Account' : 'Delete Account'}
                     </button>
                 </form>
             </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logo from '../assets/L.png'
+import { ArrowRight, Lock, ShieldAlert } from "lucide-react"
 
 // Reads the same env var every other page uses for API calls
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
@@ -37,54 +38,55 @@ const AdminLogin = () => {
         }
     }
 
-    const inputClass = `bg-white border border-borderColour rounded-lg px-4 py-2.5 text-bodyText text-sm
-        focus:outline-none focus:border-button transition-colors duration-200 w-full`
+    const inputClass = `bg-white border border-border-default rounded-[9px] px-4 py-2.5 text-text-primary text-[14px] font-medium focus:outline-none focus:border-rose focus:shadow-[0_0_0_3px_rgba(244,63,94,0.15)] transition-all duration-200 w-full placeholder:text-text-muted/60`
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-4 font-sans text-bodyText">
-            <div className="w-full max-w-md flex flex-col gap-8">
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 font-inter bg-slate-50 relative overflow-hidden">
+            
+            {/* Background effects - Admin specific (Rose hue) */}
+            <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-rose/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-rose/5 rounded-full blur-3xl pointer-events-none"></div>
 
-                {/* Logo + heading */}
-                <div className="text-center">
-                    <div className="flex justify-center mb-3">
-                        <img className="w-20" src={logo} alt="Logo" />
+            <div className="w-full max-w-[420px] flex flex-col items-center gap-8 relative z-10 animate-fade-up">
+
+                {/* Logo & Header */}
+                <div className="w-full flex flex-col items-center text-center gap-3">
+                    <div onClick={() => navigate('/')} className="bg-white p-3 rounded-2xl shadow-sm border border-border-default flex justify-center items-center mb-2 cursor-pointer hover:scale-105 hover:shadow-md transition-all duration-200">
+                        <img className="w-10 h-10 object-contain" src={logo} alt="LoanSense" />
                     </div>
-                    <p className="text-3xl font-black text-heading">Admin Portal</p>
-                    <p className="text-sm text-bodyText/60 mt-1">Sign in with your administrator credentials</p>
+                    <div className="flex flex-col gap-1.5">
+                        <h1 className="text-[40px] font-black text-sidebar-bg tracking-[-0.03em] leading-none py-4">Admin Portal</h1>
+                        <p className="text-[14px] font-medium text-text-muted">Sign in with administrator credentials</p>
+                    </div>
                 </div>
 
                 {/* Badge */}
-                <div className="flex justify-center">
-                    <span className="flex items-center gap-2 bg-card border border-borderColour
-                                     text-xs font-semibold text-bodyText/60 px-4 py-1.5 rounded-full">
-                        <span className="w-1.5 h-1.5 rounded-full bg-button inline-block" />
-                        Restricted access · admin only
+                <div className="flex justify-center -mt-4">
+                    <span className="flex items-center gap-2 bg-rose-light border border-[#FECDD3] text-[11px] font-bold text-rose uppercase tracking-[0.05em] px-4 py-1.5 rounded-[8px]">
+                        <ShieldAlert size={14} />
+                        Restricted access
                     </span>
                 </div>
 
-                {/* Card */}
-                <div className="bg-card border border-borderColour rounded-xl p-8">
-                    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                {/* Auth Card */}
+                <div className="w-full bg-surface border border-border-default rounded-[16px] p-8 sm:p-10 shadow-card">
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
-                        <div className="flex flex-col gap-1">
-                            <p className="text-xs font-semibold text-accentSoft uppercase tracking-wide">
-                                Admin Email
-                            </p>
+                        <div className="flex flex-col gap-2">
+                            <label className="text-[12px] font-bold text-text-primary uppercase tracking-[0.05em]">Admin Email</label>
                             <input
                                 className={inputClass}
                                 type="email"
                                 name="email"
-                                placeholder="admin@loanapp.com"
+                                placeholder="admin@loansense.com"
                                 value={form.email}
                                 onChange={handleChange}
                                 required
                             />
                         </div>
 
-                        <div className="flex flex-col gap-1">
-                            <p className="text-xs font-semibold text-accentSoft uppercase tracking-wide">
-                                Password
-                            </p>
+                        <div className="flex flex-col gap-2">
+                            <label className="text-[12px] font-bold text-text-primary uppercase tracking-[0.05em]">Password</label>
                             <input
                                 className={inputClass}
                                 type="password"
@@ -97,31 +99,45 @@ const AdminLogin = () => {
                         </div>
 
                         {error && (
-                            <div className="flex items-center gap-2 bg-danger/5 border border-danger/20
-                                            rounded-lg px-4 py-3">
-                                <span className="text-danger font-bold flex-shrink-0">✗</span>
-                                <p className="text-danger text-sm">{error}</p>
+                            <div className="flex items-center gap-2.5 bg-rose-light border border-[#FECDD3] rounded-[9px] px-4 py-3">
+                                <div className="w-5 h-5 rounded-full bg-rose/20 flex items-center justify-center shrink-0">
+                                    <span className="text-rose font-black text-[10px]">!</span>
+                                </div>
+                                <p className="text-[13px] font-bold text-rose">{error}</p>
                             </div>
                         )}
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="bg-button hover:bg-buttonHover duration-300 text-white font-black
-                                       text-base px-8 py-3 rounded-full mt-2 disabled:opacity-50
-                                       disabled:cursor-not-allowed"
+                            className="bg-text-primary hover:bg-black duration-200 text-white font-bold text-[14px] px-6 py-3.5 rounded-[9px] mt-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group w-full"
                         >
-                            {loading ? 'Signing in...' : 'Sign In →'}
+                            {loading ? (
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            ) : (
+                                <>
+                                    Secure Sign In
+                                    <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+                                </>
+                            )}
                         </button>
+
                     </form>
                 </div>
 
-                <p className="text-center text-sm text-bodyText/60">
-                    Not an admin?{' '}
-                    <a href="/login" className="text-accentSoft font-bold hover:text-buttonHover duration-200">
-                        Back to user login
-                    </a>
-                </p>
+                {/* Footer */}
+                <div className="flex flex-col items-center gap-6 w-full">
+                    <p className="text-[14px] font-medium text-text-muted">
+                        Not an admin?{' '}
+                        <a href="/login" className="text-text-primary font-bold hover:text-black transition-colors">
+                            Back to user login
+                        </a>
+                    </p>
+                    
+                    <div className="flex items-center gap-2 text-[11px] font-bold text-text-muted/60 uppercase tracking-widest">
+                        <Lock size={12} /> System Admin Verification Required
+                    </div>
+                </div>
 
             </div>
         </div>

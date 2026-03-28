@@ -55,7 +55,25 @@ function App() {
                     </AdminRoute>
                 } />
             </Routes>
-            <ToastContainer />
+            <ToastContainer
+                position="top-right"
+                autoClose={4000}
+                hideProgressBar
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                toastClassName={(context) =>
+                    "relative flex p-3 min-h-14 rounded-md justify-between overflow-hidden cursor-pointer bg-white text-gray-800 text-sm font-medium shadow-[0_4px_16px_rgba(0,0,0,0.08)] ring-1 ring-[#0000000a] mb-3 " +
+                    (context?.type === "error" ? "border-l-4 border-[#E11D48]" :
+                     context?.type === "success" ? "border-l-4 border-[#059669]" :
+                     context?.type === "warning" ? "border-l-4 border-[#D97706]" :
+                     "border-l-4 border-[#4F46E5]")
+                }
+                bodyClassName={() => "flex items-center gap-3 font-inter"}
+            />
         </>
     )
 }
