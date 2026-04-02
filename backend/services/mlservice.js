@@ -5,25 +5,26 @@ const SHAP_URL = process.env.SHAP_SERVICE_URL || "http://localhost:8001";
 
 /**
  * Builds the payload the Python pipeline expects from a
- * FinancialProfile doc + LoanEligibilityCheck request body
+ * FinancialProfile doc + LoanEligibilityCheck request body.
+ * Null-guards every field so Pydantic never receives NaN / undefined.
  */
 function buildMLPayload(profile, requestedLoanAmount, tenureMonths) {
     const totalExistingEmi =
-        profile.existingEmis.reduce((s, e) => s + e.monthlyAmount, 0) +
-        profile.creditCardDues.reduce((s, c) => s + c.minimumDue, 0) +
-        profile.otherLoans.reduce((s, l) => s + l.monthlyEMI, 0);
+        (profile.existingEmis  || []).reduce((s, e) => s + (e.monthlyAmount || 0), 0) +
+        (profile.creditCardDues|| []).reduce((s, c) => s + (c.minimumDue    || 0), 0) +
+        (profile.otherLoans    || []).reduce((s, l) => s + (l.monthlyEMI    || 0), 0);
 
     return {
-        age:                      profile.age,
-        employment_type:          profile.employmentType,
-        city_tier:                profile.cityTier,
-        has_coapplicant:          0,                        // updated below if needed
-        monthly_income:           profile.monthlyNetIncome,
-        credit_score:             profile.creditScore,
-        total_existing_emi:       totalExistingEmi,
-        requested_loan_amount:    requestedLoanAmount,
-        loan_tenure_months:       tenureMonths,
-        work_experience_years:    profile.employmentTenureMonths / 12,
+        age:                   Number(profile.age)                || 25,
+        employment_type:       profile.employmentType             || "Salaried",
+        city_tier:             profile.cityTier                   || "Metro",
+        has_coapplicant:       0,                                  // updated in getFullMLResult
+        monthly_income:        Number(profile.monthlyNetIncome)   || 0,
+        credit_score:          Number(profile.creditScore)        || 650,
+        total_existing_emi:    totalExistingEmi,
+        requested_loan_amount: Number(requestedLoanAmount)        || 0,
+        loan_tenure_months:    Number(tenureMonths)               || 60,
+        work_experience_years: Number(profile.employmentTenureMonths || 0) / 12,
     };
 }
 
@@ -46,17 +47,8 @@ async function getFullMLResult(profile, requestedLoanAmount, tenureMonths, hasCo
         getMLExplanation(payload),
     ]);
 
-    // Map snake_case SHAP response → camelCase for frontend
-    const mappedExplanation = {
-        verdict:          explanation.verdict,
-        summary:          explanation.summary,
-        topPositive:      explanation.top_positive,
-        topNegative:      explanation.top_negative,
-        allContributions: explanation.all_contributions,
-        baseValue:        explanation.base_value,
-    };
-
-    return { prediction, explanation: mappedExplanation };
+    // Return explanation as-is in snake_case — loanEligibilityService handles the mapping
+    return { prediction, explanation };
 }
 
 module.exports = { getFullMLResult };
