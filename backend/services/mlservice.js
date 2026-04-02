@@ -28,12 +28,12 @@ function buildMLPayload(profile, requestedLoanAmount, tenureMonths) {
 }
 
 async function getMLPrediction(payload) {
-    const { data } = await axios.post(`${ML_URL}/predict`, payload, { timeout: 10000 });
+    const { data } = await axios.post(`${ML_URL}/predict`, payload, { timeout: 60000 });
     return data;
 }
 
 async function getMLExplanation(payload) {
-    const { data } = await axios.post(`${SHAP_URL}/explain`, payload, { timeout: 15000 });
+    const { data } = await axios.post(`${SHAP_URL}/explain`, payload, { timeout: 60000 });
     return data;
 }
 
