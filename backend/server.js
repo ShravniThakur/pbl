@@ -23,7 +23,7 @@ connectDatabase()
 // middlewares 
 // middlewares 
 app.use(cors({
-    origin: 'http://localhost:5556',
+    origin: process.env.FRONTEND_URL,
     credentials: true
 }))
 app.use(express.json())
