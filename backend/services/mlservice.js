@@ -3,6 +3,32 @@ const axios = require("axios");
 const ML_URL   = process.env.ML_SERVICE_URL   || "http://localhost:8000";
 const SHAP_URL = process.env.SHAP_SERVICE_URL || "http://localhost:8001";
 
+const MAX_RETRIES = 15;
+const RETRY_DELAY = 4000;
+
+async function pollUntilReady(name, url) {
+    for (let i = 1; i <= MAX_RETRIES; i++) {
+        try {
+            await axios.get(`${url}/health`, { timeout: 5000 });
+            console.log(`✅ ${name} is ready`);
+            return true;
+        } catch {
+            console.log(`⏳ ${name} not ready (${i}/${MAX_RETRIES}) — retrying in ${RETRY_DELAY / 1000}s...`);
+            await new Promise(res => setTimeout(res, RETRY_DELAY));
+        }
+    }
+    console.warn(`⚠️  ${name} never became ready — fallback scores will be used`);
+    return false;
+}
+
+async function waitForMLServices() {
+    const [mlReady, shapReady] = await Promise.all([
+        pollUntilReady("ML service",   ML_URL),
+        pollUntilReady("SHAP service", SHAP_URL),
+    ]);
+    return { mlReady, shapReady };
+}
+
 /**
  * Builds the payload the Python pipeline expects from a
  * FinancialProfile doc + LoanEligibilityCheck request body.
@@ -51,4 +77,4 @@ async function getFullMLResult(profile, requestedLoanAmount, tenureMonths, hasCo
     return { prediction, explanation };
 }
 
-module.exports = { getFullMLResult };
+module.exports = { getFullMLResult, waitForMLServices };

@@ -13,6 +13,8 @@ const adminRouter = require('./routes/admin_routes')
 const loanProductRouter = require('./routes/loanProduct_routes')
 
 const { verifyLoanOnChain } = require('./services/blockchainservice');
+const { waitForMLServices } = require('./services/mlservice'); 
+
 // app config 
 const app = express()
 const port = process.env.PORT
@@ -47,6 +49,13 @@ app.get('/api/verify-loan/:id', async (req, res) => {
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
+
+async function startServer() {
+    await waitForMLServices();
+    app.listen(5555, () => console.log("App running on port 5555"));
+}
+
+startServer();
 // run server
 app.listen(port, () => {
     console.log('App running on port ' + port)
