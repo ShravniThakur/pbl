@@ -1,29 +1,25 @@
 const axios = require("axios");
 
-const ML_URL   = process.env.ML_SERVICE_URL   || "http://localhost:8000";
+const ML_URL = process.env.ML_SERVICE_URL || "http://localhost:8000";
 const SHAP_URL = process.env.SHAP_SERVICE_URL || "http://localhost:8001";
 
-const MAX_RETRIES = 15;
-const RETRY_DELAY = 4000;
-
 async function pollUntilReady(name, url) {
-    for (let i = 1; i <= MAX_RETRIES; i++) {
-        try {
-            await axios.get(`${url}/health`, { timeout: 5000 });
-            console.log(`✅ ${name} is ready`);
-            return true;
-        } catch {
-            console.log(`⏳ ${name} not ready (${i}/${MAX_RETRIES}) — retrying in ${RETRY_DELAY / 1000}s...`);
-            await new Promise(res => setTimeout(res, RETRY_DELAY));
-        }
+
+    try {
+        await axios.get(`${url}/health`);
+        console.log(`✅ ${name} is ready`);
+        return true;
+    } catch {
+        console.log('not ready');
     }
-    console.warn(`⚠️  ${name} never became ready — fallback scores will be used`);
+
+
     return false;
 }
 
 async function waitForMLServices() {
     const [mlReady, shapReady] = await Promise.all([
-        pollUntilReady("ML service",   ML_URL),
+        pollUntilReady("ML service", ML_URL),
         pollUntilReady("SHAP service", SHAP_URL),
     ]);
     return { mlReady, shapReady };
@@ -36,20 +32,20 @@ async function waitForMLServices() {
  */
 function buildMLPayload(profile, requestedLoanAmount, tenureMonths) {
     const totalExistingEmi =
-        (profile.existingEmis  || []).reduce((s, e) => s + (e.monthlyAmount || 0), 0) +
-        (profile.creditCardDues|| []).reduce((s, c) => s + (c.minimumDue    || 0), 0) +
-        (profile.otherLoans    || []).reduce((s, l) => s + (l.monthlyEMI    || 0), 0);
+        (profile.existingEmis || []).reduce((s, e) => s + (e.monthlyAmount || 0), 0) +
+        (profile.creditCardDues || []).reduce((s, c) => s + (c.minimumDue || 0), 0) +
+        (profile.otherLoans || []).reduce((s, l) => s + (l.monthlyEMI || 0), 0);
 
     return {
-        age:                   Number(profile.age)                || 25,
-        employment_type:       profile.employmentType             || "Salaried",
-        city_tier:             profile.cityTier                   || "Metro",
-        has_coapplicant:       0,                                  // updated in getFullMLResult
-        monthly_income:        Number(profile.monthlyNetIncome)   || 0,
-        credit_score:          Number(profile.creditScore)        || 650,
-        total_existing_emi:    totalExistingEmi,
-        requested_loan_amount: Number(requestedLoanAmount)        || 0,
-        loan_tenure_months:    Number(tenureMonths)               || 60,
+        age: Number(profile.age) || 25,
+        employment_type: profile.employmentType || "Salaried",
+        city_tier: profile.cityTier || "Metro",
+        has_coapplicant: 0,                                  // updated in getFullMLResult
+        monthly_income: Number(profile.monthlyNetIncome) || 0,
+        credit_score: Number(profile.creditScore) || 650,
+        total_existing_emi: totalExistingEmi,
+        requested_loan_amount: Number(requestedLoanAmount) || 0,
+        loan_tenure_months: Number(tenureMonths) || 60,
         work_experience_years: Number(profile.employmentTenureMonths || 0) / 12,
     };
 }
