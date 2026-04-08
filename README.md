@@ -4,6 +4,16 @@
 
 ---
 
+## 🌐 Live Demo
+
+| Service | URL |
+|---------|-----|
+| Frontend (Vercel) | [https://loansense-app.vercel.app](https://loansense-app.vercel.app) |
+| Backend API (Render) | deployed on Render |
+| ML Services (Render) | deployed on Render |
+
+---
+
 ## 📌 What It Does
 
 LoanSense helps users understand their loan eligibility **before** they apply to a bank. Instead of a black-box yes/no, it gives:
@@ -525,6 +535,7 @@ The audit payload anchored on-chain looks like:
 | ML API | FastAPI, Uvicorn |
 | File Upload | Cloudinary, Multer |
 | Blockchain | Ethers.js v6, Ethereum Sepolia, Pinata IPFS |
+| Deployment | Vercel (frontend), Render (backend + ML services) |
 
 ---
 
