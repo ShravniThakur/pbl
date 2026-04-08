@@ -517,7 +517,7 @@ The audit payload anchored on-chain looks like:
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 18, Vite, Tailwind CSS |
+| Frontend | React 19, Vite, Tailwind CSS |
 | Backend | Node.js, Express 5, MongoDB, Mongoose |
 | Auth | JWT, bcrypt |
 | Validation | Zod |
